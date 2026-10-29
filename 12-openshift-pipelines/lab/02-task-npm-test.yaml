@@ -1,0 +1,44 @@
+# Modulo 12, passo 3.4: Task personalizzata che esegue i test di hello-node.
+# Riceve il codice tramite il workspace "source" (riempito da git-clone nella Pipeline).
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: npm-test
+spec:
+  description: Esegue "npm test" nella sottodirectory APP_DIR del workspace source.
+  workspaces:
+  - name: source
+    description: Workspace con il clone del repository
+  params:
+  - name: APP_DIR
+    type: string
+    description: Sottodirectory del repository che contiene package.json
+    default: hello-node
+  - name: FAIL_TESTS
+    type: string
+    description: Se "true" il test di hello-node fallisce di proposito (scenario di troubleshooting)
+    default: "false"
+  results:
+  - name: outcome
+    description: '"passed" se i test sono passati'
+  steps:
+  - name: test
+    image: registry.access.redhat.com/ubi9/nodejs-22
+    # La directory di lavoro è dentro il workspace: $(workspaces.<nome>.path) è il punto di mount
+    workingDir: $(workspaces.source.path)/$(params.APP_DIR)
+    env:
+    # Le variabili d'ambiente del container NON si ereditano dal Deployment o dalla Pipeline:
+    # se il codice legge FAIL_TESTS, devi passargliela esplicitamente.
+    - name: FAIL_TESTS
+      value: $(params.FAIL_TESTS)
+    # La cache di npm in /tmp: il pod gira con un UID arbitrario
+    - name: npm_config_cache
+      value: /tmp/.npm
+    script: |
+      #!/usr/bin/env bash
+      set -eu
+      echo "Directory: ${PWD}"
+      ls -la
+      node --version
+      npm test                       # se fallisce (exit != 0) lo step, la TaskRun e la PipelineRun falliscono
+      printf passed | tee $(results.outcome.path)

@@ -1,0 +1,41 @@
+# Scenario 2 (modulo 04): t2 non si aggiorna quando cambia s2-web:v1.
+# Non correggere questo file: applicalo, indaga, correggi sul cluster.
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: s2-web
+  labels:
+    scenario: m04-2
+spec:
+  lookupPolicy:
+    local: true
+  tags:
+  - name: "v1"
+    from:
+      kind: DockerImage
+      name: registry.access.redhat.com/ubi9/httpd-24:latest
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: t2
+  labels:
+    app: t2
+    scenario: m04-2
+  annotations:
+    image.openshift.io/triggers: '[{"from":{"kind":"ImageStreamTag","name":"s2-web:v1"},"fieldPath":"spec.template.spec.containers[?(@.name==\"web\")].image"}]'
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: t2
+  template:
+    metadata:
+      labels:
+        app: t2
+    spec:
+      containers:
+      - name: httpd
+        image: s2-web:v1
+        ports:
+        - containerPort: 8080

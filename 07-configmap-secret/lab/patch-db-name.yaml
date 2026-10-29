@@ -1,0 +1,12 @@
+# Patch per il passo 3.8: DB_NAME letta dalla chiave DATABASE del Secret condiviso db-cred.
+spec:
+  template:
+    spec:
+      containers:
+      - name: hello
+        env:
+        - name: DB_NAME
+          valueFrom:
+            secretKeyRef:
+              name: db-cred
+              key: DATABASE

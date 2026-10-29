@@ -1,0 +1,51 @@
+# Scenario 3 (modulo 07): t3 va in CrashLoopBackOff.
+# Non correggere questo file: applicalo, indaga, correggi sul cluster.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: t3-config
+  labels:
+    scenario: m07-3
+data:
+  APP_MESSAGE: "Ciao da t3"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: t3-secret
+  labels:
+    scenario: m07-3
+type: Opaque
+stringData:
+  APIKEY: k-t3-000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: t3
+  labels:
+    app: t3
+    scenario: m07-3
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: t3
+  template:
+    metadata:
+      labels:
+        app: t3
+    spec:
+      containers:
+      - name: hello
+        image: hello:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: REQUIRED_ENV
+          value: "APP_MESSAGE,API_KEY"
+        envFrom:
+        - configMapRef:
+            name: t3-config
+        - secretRef:
+            name: t3-secret

@@ -1,0 +1,10 @@
+# Patch per il passo 3.4: importa TUTTE le chiavi della ConfigMap "features" con envFrom.
+# Le chiavi aggiunte in seguito alla ConfigMap arrivano al container al prossimo riavvio del pod.
+spec:
+  template:
+    spec:
+      containers:
+      - name: hello
+        envFrom:
+        - configMapRef:
+            name: features

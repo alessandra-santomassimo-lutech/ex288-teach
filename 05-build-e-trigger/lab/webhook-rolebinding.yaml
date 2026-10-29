@@ -1,0 +1,17 @@
+# Modulo 05 - Consente agli utenti NON autenticati (es. GitHub, curl senza token)
+# di invocare i webhook delle BuildConfig di QUESTO progetto.
+# Dal 4.16 questo permesso non è più concesso di default.
+# Applica nel progetto corrente:  oc apply -f webhook-rolebinding.yaml
+# Se ricevi "forbidden", chiedi all'amministratore di applicarlo per te.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: webhook-access-unauthenticated
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:webhook
+subjects:
+- apiGroup: rbac.authorization.k8s.io
+  kind: Group
+  name: system:unauthenticated

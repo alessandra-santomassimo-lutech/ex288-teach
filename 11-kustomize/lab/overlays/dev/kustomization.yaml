@@ -1,0 +1,39 @@
+# Overlay "dev" del modulo 11.
+# PRIMA di usarlo sostituisci CAMBIAMI con il tuo $LAB (passo 3.1 del README).
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- ../../base
+
+namespace: CAMBIAMI-m11-dev
+
+# Tutti i nomi diventano dev-<nome>; kustomize aggiorna i riferimenti che conosce
+# (ConfigMap/Secret nei Deployment, selector no: quelli usano label)
+namePrefix: dev-
+
+labels:
+- pairs:
+    env: dev
+  includeSelectors: false      # solo metadata.labels: i selector della base non cambiano
+
+configMapGenerator:
+- name: app-env
+  behavior: merge              # modifica il generatore della base invece di crearne uno nuovo
+  literals:
+  - APP_MESSAGE=Ciao da DEV (Kustomize)
+  # Il Service del DB ora si chiama dev-postgresql: kustomize non riscrive i VALORI delle variabili
+  - DB_HOST=dev-postgresql
+
+patches:
+# Patch JSON 6902 con target: corregge il Service puntato dalla Route (riferimento
+# che kustomize non aggiorna con namePrefix). Il target usa il nome della BASE.
+- target:
+    group: route.openshift.io
+    version: v1
+    kind: Route
+    name: hello-node
+  patch: |-
+    - op: replace
+      path: /spec/to/name
+      value: dev-hello-node

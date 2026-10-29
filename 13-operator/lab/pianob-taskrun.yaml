@@ -1,0 +1,30 @@
+# Modulo 13, passo 3.11 (piano B): anche OpenShift Pipelines è un Operator.
+# Task e TaskRun sono API (CRD) installate dall'Operator; il controller Tekton
+# "riconcilia" la TaskRun creando un pod che ha un ownerReference verso la TaskRun.
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: attesa
+  labels:
+    app.kubernetes.io/part-of: ex288-m13
+spec:
+  params:
+  - name: SECONDI
+    default: "120"
+  steps:
+  - name: dormi
+    image: registry.access.redhat.com/ubi9/ubi-minimal
+    script: |
+      #!/usr/bin/env bash
+      echo "Attendo $(params.SECONDI) secondi: osserva il pod e i suoi ownerReferences"
+      sleep $(params.SECONDI)
+---
+apiVersion: tekton.dev/v1
+kind: TaskRun
+metadata:
+  name: osserva-owner
+  labels:
+    app.kubernetes.io/part-of: ex288-m13
+spec:
+  taskRef:
+    name: attesa

@@ -1,0 +1,14 @@
+# Modulo 12, passo 3.8: TriggerBinding = COSA estrarre dall'evento HTTP.
+# apiVersion: i docs Pipelines 1.20-1.24 mostrano triggers.tekton.dev/v1, ma la versione
+# servita con certezza è v1beta1. Controlla sul tuo cluster:
+#   oc api-resources --api-group=triggers.tekton.dev -o wide
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerBinding
+metadata:
+  name: hello-binding
+spec:
+  params:
+  - name: git-url
+    value: $(body.repository.html_url)     # campi del payload JSON di un push GitHub
+  - name: git-revision
+    value: $(body.head_commit.id)

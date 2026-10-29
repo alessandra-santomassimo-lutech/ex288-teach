@@ -1,0 +1,74 @@
+# Scenario 7 (modulo 08): web7 non si avvia.
+# Non correggere questo file: applicalo, indaga, correggi sul cluster.
+# Prerequisito: image stream "hello" con lookup locale nel progetto (passo 3.1 del README).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: t7-backend
+  labels:
+    app: t7-backend
+    scenario: m08-7
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: t7-backend
+  template:
+    metadata:
+      labels:
+        app: t7-backend
+    spec:
+      containers:
+      - name: hello
+        image: hello:latest
+        ports:
+        - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: t7-backend
+  labels:
+    app: t7-backend
+    scenario: m08-7
+spec:
+  selector:
+    app: t7-backend
+  ports:
+  - name: http
+    port: 8080
+    targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web7
+  labels:
+    app: web7
+    scenario: m08-7
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: web7
+  template:
+    metadata:
+      labels:
+        app: web7
+    spec:
+      initContainers:
+      - name: wait-backend
+        image: registry.access.redhat.com/ubi9/ubi-minimal
+        command: ["/bin/bash", "-c"]
+        args:
+        - |
+          until curl -sf -o /dev/null --max-time 3 http://t7-bakend:8080/ready; do
+            echo "$(date -u +%H:%M:%S) backend non pronto, riprovo"
+            sleep 5
+          done
+          echo "backend pronto"
+      containers:
+      - name: hello
+        image: hello:latest
+        ports:
+        - containerPort: 8080

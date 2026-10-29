@@ -1,0 +1,17 @@
+# Patch strategic merge: kustomize trova il Deployment per apiVersion/kind/metadata.name
+# e il container per "name" (le liste di container si fondono per nome).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-node
+spec:
+  template:
+    spec:
+      containers:
+      - name: hello-node
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            memory: 384Mi

@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "hello-chart.fullname" . }}-app
+  labels:
+    {{- include "hello-chart.labels" . | nindent 4 }}
+    app.kubernetes.io/component: app
+spec:
+  replicas: {{ .Values.app.replicas }}
+  selector:
+    matchLabels:
+      {{- include "hello-chart.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: app
+  template:
+    metadata:
+      labels:
+        {{- include "hello-chart.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: app
+      annotations:
+        # Cambia quando cambia la ConfigMap: forza un nuovo rollout a ogni modifica della configurazione
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+    spec:
+      containers:
+      - name: hello-node
+        image: {{ include "hello-chart.appImage" . | quote }}
+        imagePullPolicy: {{ .Values.app.image.pullPolicy }}
+        ports:
+        - name: http
+          containerPort: 8080
+        env:
+        - name: APP_MESSAGE
+          value: {{ .Values.app.message | quote }}
+        - name: READY_DELAY_SECONDS
+          value: {{ .Values.app.readyDelaySeconds | quote }}
+        - name: DB_HOST
+          value: {{ include "hello-chart.fullname" . }}-db
+        - name: DB_PORT
+          value: "5432"
+        - name: DB_NAME
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "hello-chart.fullname" . }}-db
+              key: database-name
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "hello-chart.fullname" . }}-db
+              key: database-user
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "hello-chart.fullname" . }}-db
+              key: database-password
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: http
+          periodSeconds: 5
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: http
+          initialDelaySeconds: 10
+        {{- with .Values.app.resources }}
+        resources:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+        volumeMounts:
+        - name: config
+          mountPath: /etc/app
+          readOnly: true
+      volumes:
+      - name: config
+        configMap:
+          name: {{ include "hello-chart.fullname" . }}-config

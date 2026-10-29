@@ -1,0 +1,32 @@
+# Scenario 4 (modulo 08): t4 riparte di continuo senza messaggi di errore nei log.
+# Non correggere questo file: applicalo, indaga, correggi sul cluster.
+# Prerequisito: image stream "hello" con lookup locale nel progetto (passo 3.1 del README).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: t4
+  labels:
+    app: t4
+    scenario: m08-4
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: t4
+  template:
+    metadata:
+      labels:
+        app: t4
+    spec:
+      containers:
+      - name: hello
+        image: hello:latest
+        ports:
+        - containerPort: 8080
+        resources:
+          requests:
+            cpu: 50m
+            memory: 16Mi
+          limits:
+            cpu: 200m
+            memory: 16Mi

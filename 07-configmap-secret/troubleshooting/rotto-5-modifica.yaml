@@ -1,0 +1,36 @@
+# Scenario 5 (modulo 07): "ho cambiato la ConfigMap ma l'app mostra il valore vecchio".
+# Non correggere questo file: applicalo, poi esegui il comando di modifica indicato nel README.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: t5-config
+  labels:
+    scenario: m07-5
+data:
+  APP_MESSAGE: "Versione 1"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: t5
+  labels:
+    app: t5
+    scenario: m07-5
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: t5
+  template:
+    metadata:
+      labels:
+        app: t5
+    spec:
+      containers:
+      - name: hello
+        image: hello:latest
+        ports:
+        - containerPort: 8080
+        envFrom:
+        - configMapRef:
+            name: t5-config

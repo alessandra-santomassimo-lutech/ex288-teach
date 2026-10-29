@@ -1,0 +1,13 @@
+# Modulo 12, passo 3.3: una TaskRun = una esecuzione della Task "hello".
+# generateName: il nome finale avrà un suffisso casuale, quindi crea con
+#   oc create -f 01-taskrun-hello.yaml      (NON oc apply)
+apiVersion: tekton.dev/v1
+kind: TaskRun
+metadata:
+  generateName: hello-run-
+spec:
+  taskRef:
+    name: hello                # Task nello stesso progetto (kind: Task è il default)
+  params:
+  - name: NAME
+    value: Alessandra

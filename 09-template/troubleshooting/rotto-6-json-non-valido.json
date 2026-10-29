@@ -1,0 +1,23 @@
+{
+  "kind": "Template",
+  "apiVersion": "template.openshift.io/v1",
+  "metadata": {
+    "name": "t6-json",
+    "annotations": {
+      "description": "Scenario 6 (modulo 09): non correggere questo file, usalo come indicato nel README e indaga."
+    }
+  },
+  "labels": { "scenario": "m09-6" },
+  "parameters": [
+    { "name": "NAME", "value": "t6" },
+    { "name": "MESSAGE", "value": "ciao" },
+  ],
+  "objects": [
+    {
+      "apiVersion": "v1",
+      "kind": "ConfigMap",
+      "metadata": { "name": "${NAME}-config" },
+      "data": { "messaggio": "${MESSAGE}" }
+    }
+  ]
+}

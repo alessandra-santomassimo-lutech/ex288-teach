@@ -1,0 +1,27 @@
+# Base FORNITA per l'esercizio finale del modulo 11: copiala in $EX288_WORK/m11-exam/base
+# e NON modificarla. Crea l'overlay in $EX288_WORK/m11-exam/overlays/prod.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- web-deployment.yaml
+- web-service.yaml
+- web-route.yaml
+- db-deployment.yaml
+- db-service.yaml
+
+configMapGenerator:
+- name: web-config
+  files:
+  - app.properties
+- name: web-env
+  literals:
+  - APP_MESSAGE=Base
+  - DB_HOST=db
+
+secretGenerator:
+- name: db-credentials
+  literals:
+  - database-name=webdb
+  - database-user=web
+  - database-password=base

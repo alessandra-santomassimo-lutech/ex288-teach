@@ -1,0 +1,162 @@
+# Modulo 12, passo 3.5: Pipeline completa per hello-node.
+#   fetch-source (git-clone) -> run-tests (npm-test) -> build-image (buildah) -> deploy (openshift-client)
+#   finally: report
+# Le Task fornite dall'Operator (git-clone, buildah, openshift-client) stanno nel namespace
+# openshift-pipelines e si richiamano con il "cluster resolver" (i ClusterTask non esistono più dalla 1.17).
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: hello-pipeline-v2
+spec:
+  description: Clona, testa, costruisce e rilascia hello-node nel progetto corrente.
+  params:
+    - name: GIT_URL
+      type: string
+      description: URL del repository Git delle app (es. il valore di $GIT_REPO)
+    - name: GIT_REVISION
+      type: string
+      description: Branch, tag o commit da clonare
+      default: main
+    - name: APP_DIR
+      type: string
+      description: Sottodirectory dell'app nel repository
+      default: hello-node
+    - name: IMAGE_REGISTRY
+      type: string
+      description: Registry interno di OpenShift (indirizzo raggiungibile dai pod)
+      default: image-registry.openshift-image-registry.svc:5000
+    - name: IMAGE_NAME
+      type: string
+      description: Nome dell'immagine, del Deployment e del Service
+      default: hello-node
+    - name: IMAGE_TAG
+      type: string
+      default: latest
+    - name: FAIL_TESTS
+      type: string
+      description: '"true" per simulare un test fallito'
+      default: 'false'
+    - name: DEPLOY
+      type: string
+      description: '"true" per eseguire il rilascio, qualsiasi altro valore per saltarlo'
+      default: 'true'
+  workspaces:
+    - name: shared # dichiarato qui, FORNITO dalla PipelineRun (volumeClaimTemplate o PVC)
+  tasks:
+    - name: fetch-source
+      taskRef:
+        resolver: cluster
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: git-clone
+          - name: namespace
+            value: openshift-pipelines
+      workspaces:
+        - name: output # nome del workspace DENTRO la Task git-clone
+          workspace: shared # nome del workspace della Pipeline
+      params: # parametri delle Task fornite: MAIUSCOLI
+        - name: URL
+          value: $(params.GIT_URL)
+        - name: REVISION
+          value: $(params.GIT_REVISION)
+        - name: DELETE_EXISTING
+          value: 'true'
+    - name: print-commit
+      taskRef:
+        name: hello
+      params: # parametri delle Task fornite: MAIUSCOLI
+        - name: NAME
+          value: $(tasks.fetch-source.results.COMMIT)
+    - name: run-tests
+      runAfter:
+        - fetch-source
+      taskRef:
+        name: npm-test # Task del progetto (passo 3.4)
+      workspaces:
+        - name: source
+          workspace: shared
+      params:
+        - name: APP_DIR
+          value: $(params.APP_DIR)
+        - name: FAIL_TESTS
+          value: $(params.FAIL_TESTS)
+    - name: build-image
+      runAfter:
+        - run-tests
+      taskRef:
+        resolver: cluster
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: buildah
+          - name: namespace
+            value: openshift-pipelines
+      workspaces:
+        - name: source
+          workspace: shared
+      params:
+        # $(context.pipelineRun.namespace) = progetto in cui gira la PipelineRun:
+        # il service account "pipeline" può fare push solo nel proprio progetto.
+        - name: IMAGE
+          value: $(params.IMAGE_REGISTRY)/$(context.pipelineRun.namespace)/$(params.IMAGE_NAME):$(params.IMAGE_TAG)
+        - name: DOCKERFILE
+          value: ./$(params.APP_DIR)/Dockerfile
+        - name: CONTEXT
+          value: ./$(params.APP_DIR)
+    - name: deploy
+      runAfter:
+        - build-image
+      when: # la task viene SALTATA (Skipped) se la condizione è falsa
+        - input: $(params.DEPLOY)
+          operator: in
+          values:
+            - 'true'
+      taskRef:
+        resolver: cluster
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: openshift-client
+          - name: namespace
+            value: openshift-pipelines
+      params:
+        - name: SCRIPT
+          # Usa il DIGEST prodotto da buildah (result IMAGE_DIGEST): ogni build genera un
+          # riferimento diverso, quindi "oc set image" provoca sempre un nuovo rollout.
+          value: |
+            set -e
+            APP="$(params.IMAGE_NAME)"
+            IMG="$(params.IMAGE_REGISTRY)/$(context.pipelineRun.namespace)/$(params.IMAGE_NAME)@$(tasks.build-image.results.IMAGE_DIGEST)"
+            echo "Rilascio di ${IMG}"
+            if oc get deployment "${APP}" >/dev/null 2>&1; then
+              oc set image deployment/"${APP}" '*'="${IMG}"
+            else
+              oc create deployment "${APP}" --image="${IMG}" --port=8080
+              oc expose deployment "${APP}" --port=8080
+              oc expose service "${APP}"
+            fi
+            oc rollout status deployment/"${APP}" --timeout=180s
+  finally: # gira SEMPRE alla fine, anche se una task è fallita
+    - name: report
+      params:
+        - name: AGGREGATE
+          value: $(tasks.status) # Succeeded | Failed | Completed (alcune task saltate)
+        - name: TESTS
+          value: $(tasks.run-tests.status)
+      taskSpec: # Task "inline": definita dentro la Pipeline, non riutilizzabile
+        params:
+          - name: AGGREGATE
+            type: string
+          - name: TESTS
+            type: string
+        steps:
+          - name: print
+            image: registry.access.redhat.com/ubi9/ubi-minimal
+            script: |
+              #!/usr/bin/env bash
+              echo "Esito complessivo delle task: $(params.AGGREGATE)"
+              echo "Esito dei test:               $(params.TESTS)"

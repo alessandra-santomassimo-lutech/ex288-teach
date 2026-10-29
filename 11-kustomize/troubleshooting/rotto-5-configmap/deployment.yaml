@@ -1,0 +1,31 @@
+# Scenario 5 (modulo 11): da applicare con "oc apply -f" DOPO "oc apply -k" della stessa cartella.
+# Non correggere questo file: applicalo, indaga, correggi sul cluster (o in una TUA copia della cartella).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: k5-web
+  labels:
+    app: k5-web
+    scenario: m11-5
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: k5-web
+  template:
+    metadata:
+      labels:
+        app: k5-web
+    spec:
+      containers:
+      - name: httpd
+        image: registry.access.redhat.com/ubi9/httpd-24
+        ports:
+        - containerPort: 8080
+        volumeMounts:
+        - name: config
+          mountPath: /etc/k5
+      volumes:
+      - name: config
+        configMap:
+          name: k5-config

@@ -1,0 +1,95 @@
+apiVersion: v1
+items:
+  - apiVersion: image.openshift.io/v1
+    kind: ImageStream
+    metadata:
+      annotations:
+        openshift.io/generated-by: OpenShiftNewBuild
+      labels:
+        build: nodejs-ex288
+      name: nodejs-22
+    spec:
+      lookupPolicy:
+        local: false
+      tags:
+        - annotations:
+            openshift.io/imported-from: registry.access.redhat.com/ubi9/nodejs-22
+          from:
+            kind: DockerImage
+            name: registry.access.redhat.com/ubi9/nodejs-22
+          generation: null
+          importPolicy:
+            importMode: Legacy
+          name: latest
+          referencePolicy:
+            type: ''
+    status:
+      dockerImageRepository: ''
+  - apiVersion: image.openshift.io/v1
+    generation: 0
+    image:
+      dockerImageMetadata: null
+      metadata: {}
+    kind: ImageStreamTag
+    lookupPolicy:
+      local: false
+    metadata:
+      annotations:
+        openshift.io/generated-by: OpenShiftNewBuild
+        openshift.io/imported-from: nodejs-ex288:latest
+      labels:
+        build: nodejs-ex288
+      name: nodejs-ex288:latest
+    tag:
+      annotations: null
+      from:
+        kind: DockerImage
+        name: nodejs-ex288:latest
+      generation: null
+      importPolicy:
+        importMode: Legacy
+      name: latest
+      referencePolicy:
+        type: ''
+  - apiVersion: build.openshift.io/v1
+    kind: BuildConfig
+    metadata:
+      annotations:
+        openshift.io/generated-by: OpenShiftNewBuild
+      labels:
+        build: nodejs-ex288
+      name: nodejs-ex288
+    spec:
+      nodeSelector: null
+      output:
+        to:
+          kind: ImageStreamTag
+          name: nodejs-ex288:1.1
+      postCommit: {}
+      resources: {}
+      source:
+        contextDir: builder-nodejs-ex288
+        git:
+          ref: builder-v11
+          uri: https://github.com/alessandra-santomassimo-lutech/ex288-apps.git
+        type: Git
+      strategy:
+        dockerStrategy:
+          from:
+            kind: ImageStreamTag
+            name: nodejs-22:latest
+        type: Docker
+      triggers:
+        - github:
+            secret: G4g6nDiwVgLzWNnL4DFQ
+          type: GitHub
+        - generic:
+            secret: No0W7lvuCowJN926tV8X
+          type: Generic
+        - type: ConfigChange
+        - imageChange: {}
+          type: ImageChange
+    status:
+      lastVersion: 0
+kind: List
+metadata: {}

@@ -1,0 +1,20 @@
+# Valori per l'ambiente "prod" del chart hello-chart (modulo 10, passo 3.8).
+# Si usano con:  helm upgrade hello ./hello-chart -f values-prod.yaml
+# Contengono SOLO le differenze rispetto a values.yaml del chart.
+app:
+  replicas: 2
+  message: "Ciao da PRODUZIONE (Helm)"
+  config: |
+    ambiente=produzione
+    funzione.nuova-ui=true
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      memory: 384Mi
+db:
+  password: prod-S3greta
+  persistence:
+    enabled: true
+    size: 1Gi

@@ -1,0 +1,119 @@
+warning: Cannot check if git requires authentication.
+apiVersion: v1
+items:
+- apiVersion: image.openshift.io/v1
+  kind: ImageStream
+  metadata:
+    annotations:
+      openshift.io/generated-by: OpenShiftNewApp
+    labels:
+      app: hello-forced
+      app.kubernetes.io/component: hello-forced
+      app.kubernetes.io/instance: hello-forced
+      app.kubernetes.io/name: nodejs
+    name: hello-forced
+  spec:
+    lookupPolicy:
+      local: false
+  status:
+    dockerImageRepository: ""
+- apiVersion: build.openshift.io/v1
+  kind: BuildConfig
+  metadata:
+    annotations:
+      openshift.io/generated-by: OpenShiftNewApp
+    labels:
+      app: hello-forced
+      app.kubernetes.io/component: hello-forced
+      app.kubernetes.io/instance: hello-forced
+      app.kubernetes.io/name: nodejs
+    name: hello-forced
+  spec:
+    nodeSelector: null
+    output:
+      to:
+        kind: ImageStreamTag
+        name: hello-forced:latest
+    postCommit: {}
+    resources: {}
+    source:
+      contextDir: hello-node
+      git:
+        ref: main
+        uri: https://github.com/alessandra-santomassimo-lutech/ex288-apps.git
+      type: Git
+    strategy:
+      sourceStrategy:
+        from:
+          kind: ImageStreamTag
+          name: nodejs:22-ubi9
+          namespace: lab-m02
+      type: Source
+    triggers:
+    - github:
+        secret: H5cdTwJ_ouWfmeWLplgP
+      type: GitHub
+    - generic:
+        secret: IHBKXSxDf7IYbkEA7oW4
+      type: Generic
+    - type: ConfigChange
+    - imageChange: {}
+      type: ImageChange
+  status:
+    lastVersion: 0
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      image.openshift.io/triggers: '[{"from":{"kind":"ImageStreamTag","name":"hello-forced:latest"},"fieldPath":"spec.template.spec.containers[?(@.name==\"hello-forced\")].image"}]'
+      openshift.io/generated-by: OpenShiftNewApp
+    labels:
+      app: hello-forced
+      app.kubernetes.io/component: hello-forced
+      app.kubernetes.io/instance: hello-forced
+      app.kubernetes.io/name: nodejs
+    name: hello-forced
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        deployment: hello-forced
+    strategy: {}
+    template:
+      metadata:
+        annotations:
+          openshift.io/generated-by: OpenShiftNewApp
+        labels:
+          deployment: hello-forced
+      spec:
+        containers:
+        - image: ' '
+          name: hello-forced
+          ports:
+          - containerPort: 8080
+            protocol: TCP
+          resources: {}
+  status: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      openshift.io/generated-by: OpenShiftNewApp
+    labels:
+      app: hello-forced
+      app.kubernetes.io/component: hello-forced
+      app.kubernetes.io/instance: hello-forced
+      app.kubernetes.io/name: nodejs
+    name: hello-forced
+  spec:
+    ports:
+    - name: 8080-tcp
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+    selector:
+      deployment: hello-forced
+  status:
+    loadBalancer: {}
+kind: List
+metadata: {}

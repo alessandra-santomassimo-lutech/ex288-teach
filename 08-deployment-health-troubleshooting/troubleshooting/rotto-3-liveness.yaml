@@ -1,0 +1,40 @@
+# Scenario 3 (modulo 08): t3 viene riavviato in continuazione.
+# Non correggere questo file: applicalo, indaga, correggi sul cluster.
+# Prerequisito: image stream "hello" con lookup locale nel progetto (passo 3.1 del README).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: t3
+  labels:
+    app: t3
+    scenario: m08-3
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: t3
+  template:
+    metadata:
+      labels:
+        app: t3
+    spec:
+      containers:
+      - name: hello
+        image: hello:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: READY_DELAY_SECONDS
+          value: "60"
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8080
+          periodSeconds: 5
+        livenessProbe:
+          httpGet:
+            path: /ready
+            port: 8080
+          initialDelaySeconds: 0
+          periodSeconds: 5
+          failureThreshold: 2

@@ -1,0 +1,39 @@
+# Scenario 1 (modulo 04): il pod di t1 non scarica l'immagine.
+# Non correggere questo file: applicalo, indaga, correggi sul cluster.
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: s1-web
+  labels:
+    scenario: m04-1
+spec:
+  lookupPolicy:
+    local: false
+  tags:
+  - name: "2.4"
+    from:
+      kind: DockerImage
+      name: registry.access.redhat.com/ubi9/httpd-24:latest
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: t1
+  labels:
+    app: t1
+    scenario: m04-1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: t1
+  template:
+    metadata:
+      labels:
+        app: t1
+    spec:
+      containers:
+      - name: httpd
+        image: s1-web:2.4
+        ports:
+        - containerPort: 8080

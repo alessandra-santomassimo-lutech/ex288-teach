@@ -1,0 +1,58 @@
+# Scenario 7 (modulo 12): il webhook risponde, ma la pipeline non va.
+# Richiede hello-pipeline del laboratorio (passo 3.5) e hello-binding (passo 3.8).
+# Non correggere questo file: applicalo, indaga, correggi sul cluster.
+# Applica con: oc apply -f rotto-7-eventlistener.yaml
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerTemplate
+metadata:
+  name: ts7-template
+  labels:
+    scenario: m12-7
+spec:
+  params:
+  - name: git-url
+  - name: git-revision
+    default: main
+  resourcetemplates:
+  - apiVersion: tekton.dev/v1
+    kind: PipelineRun
+    metadata:
+      generateName: ts7-run-
+      labels:
+        scenario: m12-7
+    spec:
+      pipelineRef:
+        name: hello-pipline
+      taskRunTemplate:
+        serviceAccountName: pipeline
+      params:
+      - name: GIT_URL
+        value: $(tt.params.git-url)
+      - name: GIT_REVISION
+        value: $(tt.params.git-revision)
+      - name: DEPLOY
+        value: "false"
+      workspaces:
+      - name: shared
+        volumeClaimTemplate:
+          spec:
+            accessModes:
+            - ReadWriteOnce
+            resources:
+              requests:
+                storage: 500Mi
+---
+apiVersion: triggers.tekton.dev/v1beta1
+kind: EventListener
+metadata:
+  name: ts7-listener
+  labels:
+    scenario: m12-7
+spec:
+  serviceAccountName: pipeline
+  triggers:
+  - name: ts7
+    bindings:
+    - ref: hello-binding
+    template:
+      ref: ts7-template

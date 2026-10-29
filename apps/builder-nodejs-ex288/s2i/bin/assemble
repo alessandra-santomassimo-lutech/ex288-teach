@@ -1,0 +1,13 @@
+#!/bin/bash
+# assemble del builder personalizzato: aggiunge un controllo e poi
+# delega allo script originale del builder UBI (/usr/libexec/s2i/assemble).
+set -euo pipefail
+echo "---> [builder-ex288] verifico che esista package.json"
+if [ ! -f /tmp/src/package.json ]; then
+  echo "ERRORE: package.json non trovato nei sorgenti: questo builder supporta solo app Node.js" >&2
+  exit 1
+fi
+/usr/libexec/s2i/assemble
+echo "build eseguita dal builder personalizzato ex288 il $(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+  > /opt/app-root/src/build-info.txt
+echo "---> [builder-ex288] build-info.txt scritto"

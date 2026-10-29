@@ -1,0 +1,18 @@
+{{- if .Values.db.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "hello-chart.fullname" . }}-db
+  labels:
+    {{- include "hello-chart.labels" . | nindent 4 }}
+    app.kubernetes.io/component: db
+spec:
+  accessModes:
+  - ReadWriteOnce
+  {{- with .Values.db.persistence.storageClass }}
+  storageClassName: {{ . }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.db.persistence.size }}
+{{- end }}

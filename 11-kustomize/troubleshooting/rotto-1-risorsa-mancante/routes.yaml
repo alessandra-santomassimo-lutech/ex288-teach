@@ -1,0 +1,10 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: k1-web
+spec:
+  to:
+    kind: Service
+    name: k1-web
+  tls:
+    termination: edge

@@ -1,0 +1,31 @@
+# Scenario 3 (modulo 09): il template "funziona" sul PC del collega, ma non nel tuo progetto.
+# Non correggere questo file: usalo come indicato nel README, indaga, poi risolvi.
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  name: t3-namespace
+labels:
+  scenario: m09-3
+parameters:
+- name: NAME
+  value: t3
+- name: TARGET_NAMESPACE
+  description: Progetto di destinazione
+  value: ex288-produzione-condivisa
+objects:
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: ${NAME}-fisso
+    # namespace scritto a mano nel template
+    namespace: produzione
+  data:
+    nota: namespace fisso nel template
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: ${NAME}-parametrico
+    # namespace preso da un parametro
+    namespace: ${TARGET_NAMESPACE}
+  data:
+    nota: namespace da parametro

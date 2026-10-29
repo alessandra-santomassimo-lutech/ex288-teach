@@ -1,0 +1,76 @@
+# Manifest di riferimento (passo 3.8): Deployment con strategia, risorse e le tre probe.
+# Usa l'immagine "hello:latest" grazie al lookup locale dell'image stream (passo 3.1).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-yaml
+  labels:
+    app: hello-yaml
+  annotations:
+    kubernetes.io/change-cause: "prima versione da YAML"
+spec:
+  replicas: 2
+  revisionHistoryLimit: 10          # quante ReplicaSet vecchie conservare (per rollout undo)
+  progressDeadlineSeconds: 600      # dopo quanto un rollout fermo diventa ProgressDeadlineExceeded
+  selector:
+    matchLabels:
+      app: hello-yaml
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1                   # al massimo 1 pod in piu' delle repliche richieste
+      maxUnavailable: 0             # mai sotto le repliche richieste (capacita' piena)
+  template:
+    metadata:
+      labels:
+        app: hello-yaml
+    spec:
+      containers:
+      - name: hello
+        image: hello:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: READY_DELAY_SECONDS
+          value: "15"
+        resources:
+          requests:                 # usate dallo scheduler per scegliere il nodo
+            cpu: 50m
+            memory: 64Mi
+          limits:                   # tetto: CPU rallentata, memoria oltre il limite = OOMKilled
+            cpu: 250m
+            memory: 256Mi
+        startupProbe:               # finche' non ha successo, liveness e readiness sono sospese
+          httpGet:
+            path: /healthz
+            port: 8080
+          periodSeconds: 5
+          failureThreshold: 24      # 24 x 5s = fino a 2 minuti per avviarsi
+        readinessProbe:             # decide se il pod riceve traffico dal Service
+          httpGet:
+            path: /ready
+            port: 8080
+          periodSeconds: 5
+          timeoutSeconds: 1
+          failureThreshold: 3
+        livenessProbe:              # se fallisce, il container viene riavviato
+          httpGet:
+            path: /healthz
+            port: 8080
+          periodSeconds: 10
+          timeoutSeconds: 2
+          failureThreshold: 3
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hello-yaml
+  labels:
+    app: hello-yaml
+spec:
+  selector:
+    app: hello-yaml
+  ports:
+  - name: http
+    port: 8080
+    targetPort: 8080

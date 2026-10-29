@@ -1,0 +1,2 @@
+APP_MESSAGE=Messaggio definito in .s2i/environment
+APP_BUILT_WITH=s2i-custom-scripts

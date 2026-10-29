@@ -1,0 +1,23 @@
+# Scenario 4 (modulo 03): il pod non riesce a scaricare l'immagine.
+# Non correggere questo file: applicalo, indaga, correggi sul cluster.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: private-app
+  labels:
+    app: private-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: private-app
+  template:
+    metadata:
+      labels:
+        app: private-app
+    spec:
+      containers:
+      - name: app
+        image: quay.io/ex288-corso-privato/private-app:1.0
+        ports:
+        - containerPort: 8080

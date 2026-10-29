@@ -1,0 +1,14 @@
+# Scenario 1 (modulo 13): la risorsa non viene accettata dal cluster.
+# Non correggere questo file: applicalo, indaga, correggi sul cluster.
+apiVersion: infinispan.org/v2
+kind: Infinispan
+metadata:
+  name: ts1-cache
+  labels:
+    scenario: m13-1
+spec:
+  replicas: 1
+  service:
+    type: DataGrid
+    container:
+      ephemeralStorage: true

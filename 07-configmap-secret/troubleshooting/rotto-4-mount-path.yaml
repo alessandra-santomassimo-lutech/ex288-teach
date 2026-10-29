@@ -1,0 +1,42 @@
+# Scenario 4 (modulo 07): t4 e' Running ma /config risponde 404.
+# Non correggere questo file: applicalo, indaga, correggi sul cluster.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: t4-files
+  labels:
+    scenario: m07-4
+data:
+  app.properties: |
+    negozio.nome=Scenario t4
+    negozio.valuta=EUR
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: t4
+  labels:
+    app: t4
+    scenario: m07-4
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: t4
+  template:
+    metadata:
+      labels:
+        app: t4
+    spec:
+      containers:
+      - name: hello
+        image: hello:latest
+        ports:
+        - containerPort: 8080
+        volumeMounts:
+        - name: files
+          mountPath: /etc/config
+      volumes:
+      - name: files
+        configMap:
+          name: t4-files

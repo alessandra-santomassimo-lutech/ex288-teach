@@ -1,0 +1,8 @@
+# Scenario 1 (modulo 10): il chart non si installa per errori di rendering.
+# Non correggere questo chart: copialo nella tua cartella di lavoro, indaga e correggi la COPIA.
+apiVersion: v2
+name: render-rotto
+description: Chart volutamente rotto (modulo 10, scenario 1)
+type: application
+version: 0.1.0
+appVersion: "1.0"

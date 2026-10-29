@@ -1,0 +1,54 @@
+# Deployment "web" per il passo 3.10: un init container attende che il Service "db" risponda
+# sulla porta 5432 prima di avviare l'applicazione.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+  labels:
+    app: web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      initContainers:
+      - name: wait-db
+        image: registry.access.redhat.com/ubi9/ubi-minimal
+        command: ["/bin/bash", "-c"]
+        args:
+        - |
+          until timeout 3 bash -c 'echo > /dev/tcp/db/5432' 2>/dev/null; do
+            echo "$(date -u +%H:%M:%S) db:5432 non risponde, riprovo tra 5 secondi"
+            sleep 5
+          done
+          echo "db:5432 raggiungibile: avvio l'applicazione"
+      containers:
+      - name: hello
+        image: hello:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: DB_HOST
+          value: db
+        - name: DB_PORT
+          value: "5432"
+        - name: DB_NAME
+          valueFrom:
+            secretKeyRef:
+              name: db-cred
+              key: DATABASE
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: db-cred
+              key: USER
+              optional: true
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8080

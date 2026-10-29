@@ -1,0 +1,48 @@
+# Scenario 1 (modulo 12): pipeline scritta per una versione vecchia di OpenShift Pipelines.
+# Non correggere questo file: applicalo, indaga, correggi sul cluster.
+# Applica con: sed "s|GIT_REPO_DA_SOSTITUIRE|$GIT_REPO|" rotto-1-clustertask.yaml | oc apply -f -
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: ts1-pipeline
+  labels:
+    scenario: m12-1
+spec:
+  params:
+  - name: GIT_URL
+    type: string
+  workspaces:
+  - name: shared
+  tasks:
+  - name: fetch
+    taskRef:
+      kind: ClusterTask
+      name: git-clone
+    workspaces:
+    - name: output
+      workspace: shared
+    params:
+    - name: URL
+      value: $(params.GIT_URL)
+---
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+  name: ts1-run
+  labels:
+    scenario: m12-1
+spec:
+  pipelineRef:
+    name: ts1-pipeline
+  params:
+  - name: GIT_URL
+    value: GIT_REPO_DA_SOSTITUIRE
+  workspaces:
+  - name: shared
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 100Mi

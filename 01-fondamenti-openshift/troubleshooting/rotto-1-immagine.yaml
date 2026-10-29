@@ -1,0 +1,23 @@
+# Scenario 1 (modulo 01): il deployment non parte. Non correggere questo file:
+# applicalo, indaga sul cluster e correggi le risorse con oc.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shop
+  labels:
+    app: shop
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: shop
+  template:
+    metadata:
+      labels:
+        app: shop
+    spec:
+      containers:
+      - name: httpd
+        image: registry.access.redhat.com/ubi9/httpd-42
+        ports:
+        - containerPort: 8080

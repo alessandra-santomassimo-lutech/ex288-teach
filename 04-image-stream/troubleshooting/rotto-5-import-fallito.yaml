@@ -1,0 +1,41 @@
+# Scenario 5 (modulo 04): l'image stream s5-web non contiene immagini.
+# Non correggere questo file: applicalo, indaga, correggi sul cluster.
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: s5-web
+  labels:
+    scenario: m04-5
+spec:
+  lookupPolicy:
+    local: true
+  tags:
+  - name: "latest"
+    from:
+      kind: DockerImage
+      name: registry.access.redhat.com/ubi9/httpd-42:latest
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: t5
+  labels:
+    app: t5
+    scenario: m04-5
+  annotations:
+    image.openshift.io/triggers: '[{"from":{"kind":"ImageStreamTag","name":"s5-web:latest"},"fieldPath":"spec.template.spec.containers[?(@.name==\"httpd\")].image"}]'
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: t5
+  template:
+    metadata:
+      labels:
+        app: t5
+    spec:
+      containers:
+      - name: httpd
+        image: s5-web:latest
+        ports:
+        - containerPort: 8080

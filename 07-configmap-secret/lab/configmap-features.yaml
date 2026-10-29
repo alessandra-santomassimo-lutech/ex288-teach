@@ -1,0 +1,11 @@
+# ConfigMap creata in modo dichiarativo (passo 3.2).
+# I valori in "data" sono SEMPRE stringhe: "true", "10" e "on" vanno tra virgolette.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: features
+  labels:
+    app: hello
+data:
+  APP_FEATURE_CART: "on"
+  APP_FEATURE_WISHLIST: "off"

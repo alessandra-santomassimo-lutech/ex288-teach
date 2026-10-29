@@ -1,0 +1,34 @@
+# Scenario 2 (modulo 09): il template si processa senza errori, ma il Deployment non viene creato.
+# Non correggere questo file: usalo come indicato nel README, indaga, poi risolvi
+# correggendo una TUA copia del template.
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  name: t2-replicas
+labels:
+  scenario: m09-2
+parameters:
+- name: NAME
+  value: t2
+- name: REPLICAS
+  value: "2"
+objects:
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: ${NAME}
+  spec:
+    replicas: "${REPLICAS}"
+    selector:
+      matchLabels:
+        deployment: ${NAME}
+    template:
+      metadata:
+        labels:
+          deployment: ${NAME}
+      spec:
+        containers:
+        - name: httpd
+          image: registry.access.redhat.com/ubi9/httpd-24
+          ports:
+          - containerPort: 8080

@@ -1,0 +1,8 @@
+# Scenario 4 (modulo 10): "nuova versione" di hello-chart, rinominata dal team in hello-app.
+# Non correggere questo chart: usalo per l'upgrade come indicato nel README e indaga.
+apiVersion: v2
+name: hello-app
+description: hello-node + PostgreSQL (chart rinominato - modulo 10, scenario 4)
+type: application
+version: 0.2.0
+appVersion: "1.1.0"

@@ -1,0 +1,7 @@
+# Valori dello scenario 1 (modulo 10)
+replicas: 1
+labels:
+  tier: web
+  team: ex288
+app:
+  image: registry.access.redhat.com/ubi9/httpd-24

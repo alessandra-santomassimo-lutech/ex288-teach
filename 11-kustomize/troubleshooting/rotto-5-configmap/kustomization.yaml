@@ -1,0 +1,11 @@
+# Scenario 5 (modulo 11): la configurazione si genera con kustomize, il Deployment si applica a parte.
+# Non correggere questo file: applicalo come indicato nel README, indaga, correggi sul cluster (o in una TUA copia della cartella).
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+labels:
+- pairs:
+    scenario: m11-5
+configMapGenerator:
+- name: k5-config
+  literals:
+  - messaggio=ciao da k5

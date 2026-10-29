@@ -1,0 +1,11 @@
+# Scenario 5 (modulo 10): una ConfigMap creata a mano con lo stesso nome che userà il chart.
+# Non correggere questo file: applicalo, poi installa la release "conflitto" come indicato nel README.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: conf-config
+  labels:
+    creata-da: mano
+data:
+  app.properties: |
+    ambiente=creato-a-mano

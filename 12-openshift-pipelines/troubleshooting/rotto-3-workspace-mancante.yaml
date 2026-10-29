@@ -1,0 +1,19 @@
+# Scenario 3 (modulo 12): la PipelineRun non parte. Richiede hello-pipeline del laboratorio (passo 3.5).
+# Non correggere questo file: applicalo, indaga, correggi sul cluster.
+# Applica con: sed "s|GIT_REPO_DA_SOSTITUIRE|$GIT_REPO|" rotto-3-workspace-mancante.yaml | oc apply -f -
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+  name: ts3-run
+  labels:
+    scenario: m12-3
+spec:
+  pipelineRef:
+    name: hello-pipeline
+  taskRunTemplate:
+    serviceAccountName: pipeline
+  params:
+  - name: GIT_URL
+    value: GIT_REPO_DA_SOSTITUIRE
+  - name: DEPLOY
+    value: "false"

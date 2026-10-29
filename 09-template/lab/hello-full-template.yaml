@@ -1,0 +1,294 @@
+# Modulo 09 - template PRE-ESISTENTE in formato YAML: usalo così com'è.
+#
+# Applicazione multi-container completa, interamente OpenShift:
+#   ImageStream + BuildConfig (S2I da Git)  ->  Deployment con trigger sull'image stream
+#   Service + Route edge per l'app, Secret con password generata, ConfigMap montata,
+#   Deployment + Service PostgreSQL.
+#
+# Prerequisito: nel progetto deve esistere l'ImageStreamTag del builder (parametro
+# BUILDER_ISTAG, default nodejs:22-ubi9), importato con:
+#   oc import-image nodejs:22-ubi9 --from=registry.access.redhat.com/ubi9/nodejs-22 --confirm
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  name: hello-full
+  annotations:
+    openshift.io/display-name: "Hello Node + PostgreSQL (build da Git)"
+    description: >-
+      Costruisce hello-node da Git con S2I e la esegue con un Deployment che si
+      aggiorna a ogni nuova immagine, insieme a un database PostgreSQL effimero.
+    tags: "nodejs,postgresql,ex288"
+    iconClass: icon-nodejs
+# Mostrato da "oc new-app" al termine dell'istanziazione (i parametri vengono sostituiti)
+message: |-
+  Applicazione ${APP_NAME} creata. La prima build parte subito: oc logs -f bc/${APP_NAME}
+  Database ${DB_NAME}, utente ${DB_USER}, password generata: ${DB_PASSWORD}
+# Label aggiunte a TUTTI gli oggetti creati dal template
+labels:
+  template: hello-full
+parameters:
+- name: APP_NAME
+  displayName: Nome applicazione
+  description: Nome di tutti gli oggetti dell'app; il database usa lo stesso nome con suffisso -db
+  value: hello
+  required: true
+- name: GIT_URI
+  displayName: Repository Git
+  description: URL del repository che contiene il codice (il tuo GIT_REPO)
+  required: true
+- name: GIT_REF
+  displayName: Branch Git
+  value: main
+- name: CONTEXT_DIR
+  displayName: Sottocartella del codice
+  value: hello-node
+- name: BUILDER_ISTAG
+  displayName: Builder S2I
+  description: ImageStreamTag del builder Node.js nel progetto corrente
+  value: nodejs:22-ubi9
+- name: APP_MESSAGE
+  displayName: Messaggio dell'applicazione
+  value: Ciao da un template OpenShift!
+- name: REPLICAS
+  displayName: Repliche dell'applicazione
+  description: Numero intero (usato con la sintassi non-stringa)
+  value: "1"
+- name: POSTGRES_IMAGE
+  displayName: Immagine PostgreSQL
+  value: registry.redhat.io/rhel9/postgresql-16
+- name: DB_NAME
+  displayName: Nome del database
+  value: hellodb
+- name: DB_USER
+  displayName: Utente del database
+  value: hello
+- name: DB_PASSWORD
+  displayName: Password del database
+  description: Se non la passi, viene generata (16 caratteri alfanumerici)
+  generate: expression
+  from: "[a-zA-Z0-9]{16}"
+objects:
+# ---------------------------------------------------------------- build
+- apiVersion: image.openshift.io/v1
+  kind: ImageStream
+  metadata:
+    name: ${APP_NAME}
+    labels:
+      app: ${APP_NAME}
+  spec:
+    lookupPolicy:
+      local: true
+- apiVersion: build.openshift.io/v1
+  kind: BuildConfig
+  metadata:
+    name: ${APP_NAME}
+    labels:
+      app: ${APP_NAME}
+  spec:
+    source:
+      type: Git
+      git:
+        uri: ${GIT_URI}
+        ref: ${GIT_REF}
+      contextDir: ${CONTEXT_DIR}
+    strategy:
+      type: Source
+      sourceStrategy:
+        from:
+          kind: ImageStreamTag
+          name: ${BUILDER_ISTAG}
+    output:
+      to:
+        kind: ImageStreamTag
+        name: ${APP_NAME}:latest
+    triggers:
+    - type: ConfigChange
+    - type: ImageChange
+      imageChange: {}
+# ---------------------------------------------------------------- configurazione
+- apiVersion: v1
+  kind: Secret
+  metadata:
+    name: ${APP_NAME}-db
+    labels:
+      app: ${APP_NAME}
+  type: Opaque
+  stringData:
+    database-name: ${DB_NAME}
+    database-user: ${DB_USER}
+    database-password: ${DB_PASSWORD}
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: ${APP_NAME}-config
+    labels:
+      app: ${APP_NAME}
+  data:
+    app.properties: |
+      app.name=${APP_NAME}
+      db.host=${APP_NAME}-db
+      origine=template hello-full
+# ---------------------------------------------------------------- applicazione
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: ${APP_NAME}
+    labels:
+      app: ${APP_NAME}
+      app.kubernetes.io/component: frontend
+    annotations:
+      # Trigger: quando ${APP_NAME}:latest cambia, aggiorna l'immagine del container hello-node
+      image.openshift.io/triggers: '[{"from":{"kind":"ImageStreamTag","name":"${APP_NAME}:latest"},"fieldPath":"spec.template.spec.containers[?(@.name==\"hello-node\")].image"}]'
+  spec:
+    replicas: ${{REPLICAS}}
+    selector:
+      matchLabels:
+        deployment: ${APP_NAME}
+    template:
+      metadata:
+        labels:
+          app: ${APP_NAME}
+          deployment: ${APP_NAME}
+      spec:
+        containers:
+        - name: hello-node
+          # Finché la prima build non termina il pod resta in ErrImagePull: è normale,
+          # il trigger sostituirà questo valore con il digest dell'immagine costruita.
+          image: ${APP_NAME}:latest
+          ports:
+          - name: http
+            containerPort: 8080
+          env:
+          - name: APP_MESSAGE
+            value: ${APP_MESSAGE}
+          - name: DB_HOST
+            value: ${APP_NAME}-db
+          - name: DB_PORT
+            value: "5432"
+          - name: DB_NAME
+            valueFrom:
+              secretKeyRef:
+                name: ${APP_NAME}-db
+                key: database-name
+          - name: DB_USER
+            valueFrom:
+              secretKeyRef:
+                name: ${APP_NAME}-db
+                key: database-user
+          - name: DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: ${APP_NAME}-db
+                key: database-password
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 10
+          volumeMounts:
+          - name: config
+            mountPath: /etc/app
+            readOnly: true
+        volumes:
+        - name: config
+          configMap:
+            name: ${APP_NAME}-config
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: ${APP_NAME}
+    labels:
+      app: ${APP_NAME}
+  spec:
+    selector:
+      deployment: ${APP_NAME}
+    ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+- apiVersion: route.openshift.io/v1
+  kind: Route
+  metadata:
+    name: ${APP_NAME}
+    labels:
+      app: ${APP_NAME}
+  spec:
+    to:
+      kind: Service
+      name: ${APP_NAME}
+    port:
+      targetPort: http
+    tls:
+      termination: edge
+      insecureEdgeTerminationPolicy: Redirect
+# ---------------------------------------------------------------- database
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: ${APP_NAME}-db
+    labels:
+      app: ${APP_NAME}
+      app.kubernetes.io/component: database
+  spec:
+    replicas: 1
+    strategy:
+      type: Recreate
+    selector:
+      matchLabels:
+        deployment: ${APP_NAME}-db
+    template:
+      metadata:
+        labels:
+          app: ${APP_NAME}
+          deployment: ${APP_NAME}-db
+      spec:
+        containers:
+        - name: postgresql
+          image: ${POSTGRES_IMAGE}
+          ports:
+          - name: postgresql
+            containerPort: 5432
+          env:
+          - name: POSTGRESQL_DATABASE
+            valueFrom:
+              secretKeyRef:
+                name: ${APP_NAME}-db
+                key: database-name
+          - name: POSTGRESQL_USER
+            valueFrom:
+              secretKeyRef:
+                name: ${APP_NAME}-db
+                key: database-user
+          - name: POSTGRESQL_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: ${APP_NAME}-db
+                key: database-password
+          readinessProbe:
+            tcpSocket:
+              port: 5432
+            initialDelaySeconds: 5
+          volumeMounts:
+          - name: data
+            mountPath: /var/lib/pgsql/data
+        volumes:
+        - name: data
+          emptyDir: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: ${APP_NAME}-db
+    labels:
+      app: ${APP_NAME}
+  spec:
+    selector:
+      deployment: ${APP_NAME}-db
+    ports:
+    - name: postgresql
+      port: 5432
+      targetPort: 5432

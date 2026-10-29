@@ -1,0 +1,170 @@
+# Modulo 09 - esercizio 4.1: template INCOMPLETO da completare.
+#
+# Gli oggetti usano già i parametri APP_MESSAGE, REPLICAS, MEMORY_LIMIT e
+# DB_VOLUME_CAPACITY, ma la sezione "parameters" non li dichiara (cerca i TODO).
+# Copialo nella tua cartella di lavoro prima di modificarlo:
+#   cp $EX288_HOME/09-template/lab/esercizio-incompleto.yaml $EX288_WORK/m09/hello-custom.yaml
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  name: hello-custom
+  annotations:
+    openshift.io/display-name: "Hello Node personalizzabile"
+    description: hello-node (immagine esistente) + PostgreSQL con volume persistente
+    tags: "nodejs,postgresql,ex288"
+labels:
+  template: hello-custom
+parameters:
+- name: APP_NAME
+  displayName: Nome applicazione
+  value: custom
+  required: true
+- name: APP_IMAGE
+  displayName: Immagine dell'applicazione
+  required: true
+- name: DB_PASSWORD
+  displayName: Password del database
+  generate: expression
+  from: "[a-zA-Z0-9]{12}"
+# TODO 1: APP_MESSAGE    - messaggio dell'app, default "Ciao dal template personalizzato"
+# TODO 2: REPLICAS       - numero di repliche, default 2 (attenzione al tipo nel Deployment!)
+# TODO 3: MEMORY_LIMIT   - limite di memoria del container hello-node, default 256Mi
+# TODO 4: DB_VOLUME_CAPACITY - dimensione del PVC del database, default 1Gi, obbligatorio
+objects:
+- apiVersion: v1
+  kind: Secret
+  metadata:
+    name: ${APP_NAME}-db
+  stringData:
+    database-name: customdb
+    database-user: custom
+    database-password: ${DB_PASSWORD}
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    name: ${APP_NAME}-db
+  spec:
+    accessModes:
+    - ReadWriteOnce
+    resources:
+      requests:
+        storage: ${DB_VOLUME_CAPACITY}
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: ${APP_NAME}-db
+  spec:
+    replicas: 1
+    strategy:
+      type: Recreate
+    selector:
+      matchLabels:
+        deployment: ${APP_NAME}-db
+    template:
+      metadata:
+        labels:
+          deployment: ${APP_NAME}-db
+      spec:
+        containers:
+        - name: postgresql
+          image: registry.redhat.io/rhel9/postgresql-16
+          ports:
+          - containerPort: 5432
+          # Le chiavi del Secret (database-*) non coincidono con le variabili attese
+          # dall'immagine (POSTGRESQL_*): le mappiamo una per una con secretKeyRef.
+          env:
+          - name: POSTGRESQL_DATABASE
+            valueFrom:
+              secretKeyRef:
+                name: ${APP_NAME}-db
+                key: database-name
+          - name: POSTGRESQL_USER
+            valueFrom:
+              secretKeyRef:
+                name: ${APP_NAME}-db
+                key: database-user
+          - name: POSTGRESQL_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: ${APP_NAME}-db
+                key: database-password
+          volumeMounts:
+          - name: data
+            mountPath: /var/lib/pgsql/data
+        volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: ${APP_NAME}-db
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: ${APP_NAME}-db
+  spec:
+    selector:
+      deployment: ${APP_NAME}-db
+    ports:
+    - port: 5432
+      targetPort: 5432
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: ${APP_NAME}
+  spec:
+    replicas: ${REPLICAS}          # TODO 5: così è una STRINGA: correggi la sintassi
+    selector:
+      matchLabels:
+        deployment: ${APP_NAME}
+    template:
+      metadata:
+        labels:
+          deployment: ${APP_NAME}
+      spec:
+        containers:
+        - name: hello-node
+          image: ${APP_IMAGE}
+          ports:
+          - containerPort: 8080
+          env:
+          - name: APP_MESSAGE
+            value: ${APP_MESSAGE}
+          - name: DB_HOST
+            value: ${APP_NAME}-db
+          - name: DB_PORT
+            value: "5432"
+          - name: DB_NAME
+            value: customdb
+          - name: DB_USER
+            value: custom
+          - name: DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: ${APP_NAME}-db
+                key: database-password
+          resources:
+            limits:
+              memory: ${MEMORY_LIMIT}
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: ${APP_NAME}
+  spec:
+    selector:
+      deployment: ${APP_NAME}
+    ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+- apiVersion: route.openshift.io/v1
+  kind: Route
+  metadata:
+    name: ${APP_NAME}
+  spec:
+    to:
+      kind: Service
+      name: ${APP_NAME}
+    tls:
+      termination: edge

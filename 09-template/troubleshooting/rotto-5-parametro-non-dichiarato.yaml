@@ -1,0 +1,24 @@
+# Scenario 5 (modulo 09): l'oggetto viene creato, ma con un valore "strano".
+# Non correggere questo file: usalo come indicato nel README, indaga, poi risolvi
+# correggendo una TUA copia del template.
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  name: t5-parametri
+labels:
+  scenario: m09-5
+parameters:
+- name: NAME
+  value: t5
+- name: APP_COLOUR
+  description: Colore del tema
+  value: blu
+objects:
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: ${NAME}-config
+  data:
+    app.properties: |
+      tema.colore=${APP_COLOR}
+      tema.nome=${NAME}

@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "hello-chart.fullname" . }}-db
+  labels:
+    {{- include "hello-chart.labels" . | nindent 4 }}
+    app.kubernetes.io/component: db
+spec:
+  selector:
+    {{- include "hello-chart.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: db
+  ports:
+  - name: postgresql
+    port: 5432
+    targetPort: 5432

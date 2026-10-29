@@ -1,0 +1,37 @@
+# Base del modulo 11: hello-node + PostgreSQL, YAML puro senza namespace.
+# Anteprima:  oc kustomize $EX288_HOME/11-kustomize/lab/base
+# Gli overlay (../overlays/dev, ../overlays/prod) la riusano senza modificarla.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- app-deployment.yaml
+- app-service.yaml
+- app-route.yaml
+- db-deployment.yaml
+- db-service.yaml
+
+# Label aggiunte a tutte le risorse; includeSelectors: true le aggiunge anche ai
+# selector e ai template dei pod (va deciso PRIMA del primo deploy: i selector sono immutabili)
+labels:
+- pairs:
+    app.kubernetes.io/part-of: hello-kustomize
+  includeSelectors: true
+
+# ConfigMap generate: il nome finale avrà un suffisso hash (es. app-config-5g7h2k9m4c)
+configMapGenerator:
+- name: app-config
+  files:
+  - app.properties
+- name: app-env
+  literals:
+  - DB_HOST=postgresql
+  - APP_MESSAGE=Ciao da Kustomize (base)
+
+# Secret generato (stesso meccanismo, valori codificati in base64 nel risultato)
+secretGenerator:
+- name: db-credentials
+  literals:
+  - database-name=hellodb
+  - database-user=hello
+  - database-password=base-password

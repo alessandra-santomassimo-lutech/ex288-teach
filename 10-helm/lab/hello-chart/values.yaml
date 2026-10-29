@@ -1,0 +1,44 @@
+# Valori di default del chart hello-chart.
+# Si sovrascrivono con:  -f altro-file.yaml  e/o  --set chiave=valore
+# Lo schema in values.schema.json valida tipi e nomi delle chiavi sotto "app".
+
+# Sostituisce il nome della release nei nomi degli oggetti (vuoto = nome release)
+fullnameOverride: ""
+
+app:
+  image:
+    # Vuoto = image-registry.openshift-image-registry.svc:5000/<namespace della release>/hello-node
+    repository: ""
+    tag: latest
+    pullPolicy: Always
+  replicas: 1
+  message: "Ciao da Helm!"
+  # Secondi in cui /ready risponde 503 dopo l'avvio
+  readyDelaySeconds: 0
+  # Contenuto del file /etc/app/app.properties (ConfigMap)
+  config: |
+    ambiente=sviluppo
+    funzione.nuova-ui=false
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      memory: 256Mi
+
+route:
+  enabled: true
+  # Vuoto = hostname generato dal router
+  host: ""
+
+db:
+  image: registry.redhat.io/rhel9/postgresql-16
+  name: hellodb
+  user: hello
+  # Valore di laboratorio: in un ambiente reale passalo con --set o con un file di valori non versionato
+  password: changeme
+  persistence:
+    enabled: false
+    size: 1Gi
+    # Vuoto = StorageClass di default del cluster
+    storageClass: ""

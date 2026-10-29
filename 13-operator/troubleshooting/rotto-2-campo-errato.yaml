@@ -1,0 +1,14 @@
+# Scenario 2 (modulo 13): oc apply rifiuta la risorsa.
+# Non correggere questo file: applicalo, indaga, correggi sul cluster.
+apiVersion: infinispan.org/v1
+kind: Infinispan
+metadata:
+  name: ts2-cache
+  labels:
+    scenario: m13-2
+spec:
+  replicas: "due"
+  service:
+    type: DataGrid
+    container:
+      ephemeralStorage: true

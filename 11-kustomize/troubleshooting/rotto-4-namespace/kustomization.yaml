@@ -1,0 +1,12 @@
+# Scenario 4 (modulo 11): overlay preso dal repository di un altro team.
+# Non correggere questo file: applicalo come indicato nel README, indaga, correggi sul cluster (o in una TUA copia della cartella).
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: ex288-produzione-condivisa
+labels:
+- pairs:
+    scenario: m11-4
+configMapGenerator:
+- name: k4-config
+  literals:
+  - ambiente=produzione

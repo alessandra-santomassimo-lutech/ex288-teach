@@ -1,0 +1,23 @@
+#!/bin/bash
+# Script assemble PERSONALIZZATO (modulo 06).
+# Si trova in .s2i/bin del repository: S2I lo usa al posto di quello del builder.
+# Buona pratica: NON riscrivere tutto, ma "avvolgere" lo script originale
+# che nelle immagini UBI Node.js si trova in $STI_SCRIPTS_PATH (/usr/libexec/s2i).
+set -euo pipefail
+
+echo "---> [ex288] assemble personalizzato: inizio"
+echo "---> [ex288] sorgenti in /tmp/src:"
+ls -la /tmp/src
+
+# Esegue l'assemble standard dell'immagine builder (copia sorgenti, npm install, ...)
+"${STI_SCRIPTS_PATH:-/usr/libexec/s2i}/assemble"
+
+# Passo aggiuntivo: registra informazioni sulla build dentro l'immagine
+cat > /opt/app-root/src/build-info.txt <<INFO
+build eseguita da: assemble personalizzato (.s2i/bin)
+data build (UTC): $(date -u +%Y-%m-%dT%H:%M:%SZ)
+OPENSHIFT_BUILD_NAME: ${OPENSHIFT_BUILD_NAME:-n/d}
+OPENSHIFT_BUILD_COMMIT: ${OPENSHIFT_BUILD_COMMIT:-n/d}
+INFO
+
+echo "---> [ex288] assemble personalizzato: fine"

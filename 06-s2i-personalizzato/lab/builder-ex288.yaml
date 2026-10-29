@@ -1,0 +1,39 @@
+# Modulo 06 - Builder S2I personalizzato costruito IN CLUSTER (passo 3.8).
+# Applica con:
+#   sed -e "s|__GIT_REPO__|$GIT_REPO|g" -e "s|__GIT_BRANCH__|$GIT_BRANCH|g" \
+#     $EX288_HOME/06-s2i-personalizzato/lab/builder-ex288.yaml | oc apply -f -
+# Prerequisito: image stream tag nodejs:22-ubi9 nel progetto.
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: nodejs-ex288              # image stream del builder personalizzato
+  labels:
+    app: nodejs-ex288
+---
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: nodejs-ex288
+  labels:
+    app: nodejs-ex288
+spec:
+  source:
+    type: Git
+    git:
+      uri: __GIT_REPO__
+      ref: __GIT_BRANCH__
+    contextDir: builder-nodejs-ex288     # Dockerfile + s2i/bin (assemble, run, usage)
+  strategy:
+    type: Docker
+    dockerStrategy:
+      from:                              # sostituisce il FROM del Dockerfile con l'image stream
+        kind: ImageStreamTag             # locale: così il trigger ImageChange può osservarlo
+        name: nodejs:22-ubi9
+  output:
+    to:
+      kind: ImageStreamTag
+      name: nodejs-ex288:1.0
+  triggers:
+  - type: ConfigChange
+  - type: ImageChange                    # nuova base nodejs:22-ubi9 => nuovo builder => nuove app
+    imageChange: {}

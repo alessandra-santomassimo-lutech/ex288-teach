@@ -1,0 +1,30 @@
+# Modulo 12, passo 3.3: la Task più semplice possibile.
+# Una Task è un modello riutilizzabile: da sola NON esegue nulla.
+# Ogni esecuzione (TaskRun) diventa un pod; ogni step diventa un container del pod.
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: hello
+spec:
+  description: Saluta il nome ricevuto come parametro e lo restituisce come result.
+  params:
+  - name: NAME                 # i parametri si leggono con $(params.NAME)
+    type: string
+    description: Chi salutare
+    default: EX288
+  results:
+  - name: greeting             # un result è un piccolo valore (stringa) che altre task possono leggere
+    description: Il saluto prodotto
+  # ATTENZIONE: Tekton sostituisce e VALIDA ogni riferimento $(...) dentro lo script,
+  # anche nei commenti dello script. Un riferimento a un result o parametro che non
+  # esiste (es. un segnaposto tipo results.<nome>) fa rifiutare la Task con
+  # "non-existent variable". Per questo i commenti qui sopra sono fuori dallo script.
+  # Il result "greeting" si scrive nel file indicato da results.greeting.path.
+  steps:
+  - name: say-hello
+    image: registry.access.redhat.com/ubi9/ubi-minimal
+    script: |
+      #!/usr/bin/env bash
+      set -eu
+      echo "Ciao $(params.NAME)! Sono lo step say-hello nel pod ${HOSTNAME}"
+      printf "Ciao $(params.NAME)" | tee $(results.greeting.path)

@@ -1,0 +1,28 @@
+# Modulo 12, passo 3.7: avvio dichiarativo della Pipeline.
+# Contiene un segnaposto: sostituiscilo con il tuo repository e crea la PipelineRun con
+#   sed "s|GIT_REPO_DA_SOSTITUIRE|$GIT_REPO|" 04-pipelinerun-hello.yaml | oc create -f -
+# (oc create e non oc apply, perché il nome è generato: generateName)
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+  generateName: hello-pipeline-run-
+spec:
+  pipelineRef:
+    name: hello-pipeline
+  taskRunTemplate:
+    serviceAccountName: pipeline       # in tekton.dev/v1 il SA sta qui (non più spec.serviceAccountName)
+  params:
+  - name: GIT_URL
+    value: GIT_REPO_DA_SOSTITUIRE
+  - name: IMAGE_TAG
+    value: v1
+  # Gli altri parametri usano il valore di default della Pipeline
+  workspaces:
+  - name: shared
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 500Mi

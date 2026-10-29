@@ -1,0 +1,7 @@
+#!/bin/bash
+cat <<USAGE
+Builder S2I Node.js 22 personalizzato (corso EX288).
+Uso in OpenShift:
+  oc new-app <imagestream-builder>~<git-repo> --context-dir=<dir>
+Il builder richiede un package.json e scrive build-info.txt nell'immagine finale.
+USAGE

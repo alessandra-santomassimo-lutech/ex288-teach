@@ -1,0 +1,41 @@
+# Scenario 4 (modulo 04): t4 ignora i cambiamenti di s4-web:v1.
+# Non correggere questo file: applicalo, indaga, correggi sul cluster.
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: s4-web
+  labels:
+    scenario: m04-4
+spec:
+  lookupPolicy:
+    local: true
+  tags:
+  - name: "v1"
+    from:
+      kind: DockerImage
+      name: registry.access.redhat.com/ubi9/httpd-24:latest
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: t4
+  labels:
+    app: t4
+    scenario: m04-4
+  annotations:
+    image.openshift.io/triggers: '[{"from":{"kind":"ImageStreamTag","name":"s4-web:v1"},"fieldPath":"spec.template.spec.containers[?(@.name==\"httpd\")].image","paused":true}]'
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: t4
+  template:
+    metadata:
+      labels:
+        app: t4
+    spec:
+      containers:
+      - name: httpd
+        image: s4-web:v1
+        ports:
+        - containerPort: 8080

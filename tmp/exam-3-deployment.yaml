@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: "2026-10-16T13:07:09Z"
+  generation: 1
+  labels:
+    app: hello-exam
+  name: hello-exam
+  namespace: lab-m03-exam-run
+  resourceVersion: "1103381"
+  uid: 96554a73-3cb8-461f-a5db-0ce8de1d3f89
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 2
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: hello-exam
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: hello-exam
+    spec:
+      containers:
+      - image: image-registry.openshift-image-registry.svc:5000/lab-m03-exam/hello-exam:1.0
+        imagePullPolicy: IfNotPresent
+        name: hello-exam
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+status: {}

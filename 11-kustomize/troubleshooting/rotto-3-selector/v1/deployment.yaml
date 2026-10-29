@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: k3-web
+  labels:
+    app: k3-web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: k3-web
+  template:
+    metadata:
+      labels:
+        app: k3-web
+    spec:
+      containers:
+      - name: httpd
+        image: registry.access.redhat.com/ubi9/httpd-24
+        ports:
+        - containerPort: 8080

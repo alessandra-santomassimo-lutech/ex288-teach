@@ -1,0 +1,35 @@
+# Scenario 1 (modulo 09): l'istanziazione si ferma prima di creare qualsiasi oggetto.
+# Non correggere questo file: usalo come indicato nel README, indaga, poi risolvi
+# passando i parametri giusti (o correggendo una TUA copia del template).
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  name: t1-required
+labels:
+  scenario: m09-1
+parameters:
+- name: NAME
+  value: t1
+- name: APP_IMAGE
+  description: Immagine dell'applicazione (riferimento completo)
+  required: true
+objects:
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: ${NAME}
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        deployment: ${NAME}
+    template:
+      metadata:
+        labels:
+          deployment: ${NAME}
+      spec:
+        containers:
+        - name: app
+          image: ${APP_IMAGE}
+          ports:
+          - containerPort: 8080

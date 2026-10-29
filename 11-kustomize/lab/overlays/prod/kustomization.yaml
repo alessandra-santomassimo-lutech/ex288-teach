@@ -1,0 +1,44 @@
+# Overlay "prod" del modulo 11.
+# PRIMA di usarlo sostituisci CAMBIAMI con il tuo $LAB (passo 3.1 del README).
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- ../../base
+
+namespace: CAMBIAMI-m11-prod
+
+labels:
+- pairs:
+    env: prod
+  includeSelectors: false
+
+# Repliche per nome di Deployment (nome della base)
+replicas:
+- name: hello-node
+  count: 3
+
+# Cambia il tag dell'immagine "hello-node" in tutti i container che la usano
+images:
+- name: hello-node
+  newTag: "1.0"
+
+configMapGenerator:
+- name: app-config
+  behavior: replace            # sostituisce completamente il contenuto della base
+  files:
+  - app.properties
+- name: app-env
+  behavior: merge
+  literals:
+  - APP_MESSAGE=Ciao da PROD (Kustomize)
+
+secretGenerator:
+- name: db-credentials
+  behavior: merge              # cambia solo la password, le altre chiavi restano
+  literals:
+  - database-password=prod-S3greta-2026
+
+patches:
+# Patch strategic merge (file con apiVersion/kind/name): risorse del container
+- path: patch-risorse.yaml

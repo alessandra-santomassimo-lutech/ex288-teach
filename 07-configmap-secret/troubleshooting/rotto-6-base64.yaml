@@ -1,0 +1,55 @@
+# Scenario 6 (modulo 07): il database t6-db rifiuta la password documentata (app123).
+# Non correggere questo file: applicalo, indaga, correggi sul cluster.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: t6-db-cred
+  labels:
+    scenario: m07-6
+type: Opaque
+data:
+  USER: YXBw
+  PASSWORD: WVhCd01USXo=
+  DATABASE: YXBwZGI=
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: t6-db
+  labels:
+    app: t6-db
+    scenario: m07-6
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: t6-db
+  template:
+    metadata:
+      labels:
+        app: t6-db
+    spec:
+      containers:
+      - name: postgresql
+        image: registry.redhat.io/rhel9/postgresql-16
+        ports:
+        - containerPort: 5432
+        envFrom:
+        - secretRef:
+            name: t6-db-cred
+          prefix: POSTGRESQL_
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: t6-db
+  labels:
+    app: t6-db
+    scenario: m07-6
+spec:
+  selector:
+    app: t6-db
+  ports:
+  - name: postgresql
+    port: 5432
+    targetPort: 5432

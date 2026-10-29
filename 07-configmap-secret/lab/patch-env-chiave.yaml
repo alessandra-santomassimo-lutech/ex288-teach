@@ -1,0 +1,19 @@
+# Patch (strategic merge) per il passo 3.4: due variabili prese da UNA chiave ciascuna.
+# Il container si chiama "hello" (nome assegnato da oc new-app --name=hello).
+spec:
+  template:
+    spec:
+      containers:
+      - name: hello
+        env:
+        - name: APP_OWNER              # nome della variabile nel container
+          valueFrom:
+            configMapKeyRef:
+              name: app-envfile        # ConfigMap
+              key: APP_OWNER           # chiave della ConfigMap
+        - name: APP_REGION
+          valueFrom:
+            configMapKeyRef:
+              name: app-envfile
+              key: APP_REGION          # questa chiave NON esiste...
+              optional: true           # ...ma con optional il pod parte lo stesso

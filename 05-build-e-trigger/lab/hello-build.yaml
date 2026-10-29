@@ -1,0 +1,66 @@
+# Modulo 05 - BuildConfig scritta a mano (laboratorio guidato, passo 3.2).
+# I segnaposto __GIT_REPO__ e __GIT_BRANCH__ vengono sostituiti al volo:
+#
+#   sed -e "s|__GIT_REPO__|$GIT_REPO|g" -e "s|__GIT_BRANCH__|$GIT_BRANCH|g" \
+#     $EX288_HOME/05-build-e-trigger/lab/hello-build.yaml | oc apply -f -
+#
+# Prerequisiti nel progetto: image stream tag nodejs:22-ubi9 e secret hello-webhook.
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: hello                     # image stream di OUTPUT: riceve le immagini prodotte
+  labels:
+    app: hello
+---
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: hello
+  labels:
+    app: hello
+spec:
+  # --- Gestione delle esecuzioni ---------------------------------------------
+  runPolicy: Serial                  # Serial (default) | SerialLatestOnly | Parallel
+  successfulBuildsHistoryLimit: 3    # quante build Complete conservare
+  failedBuildsHistoryLimit: 2        # quante build Failed/Error/Cancelled conservare
+  completionDeadlineSeconds: 1200    # oltre 20 minuti la build viene interrotta
+  # --- Da dove viene il codice ------------------------------------------------
+  source:
+    type: Git
+    git:
+      uri: __GIT_REPO__
+      ref: __GIT_BRANCH__            # branch, tag o commit
+    contextDir: hello-node           # sottocartella del repo usata come radice
+  # --- Come si costruisce -----------------------------------------------------
+  strategy:
+    type: Source                     # S2I: il Dockerfile presente in hello-node viene IGNORATO
+    sourceStrategy:
+      from:                          # immagine builder
+        kind: ImageStreamTag
+        name: nodejs:22-ubi9
+      env:                           # variabili di build (finiscono anche nell'immagine)
+      - name: BUILD_LOGLEVEL
+        value: "1"
+  # --- Dove va il risultato ---------------------------------------------------
+  output:
+    to:
+      kind: ImageStreamTag           # registry interno + tag dell'image stream
+      name: hello:latest
+  # --- Risorse del pod di build -----------------------------------------------
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+  # --- Quando parte una build -------------------------------------------------
+  triggers:
+  - type: ConfigChange               # una build subito, alla CREAZIONE della BuildConfig
+  - type: ImageChange                # una build quando cambia l'immagine "from" (nodejs:22-ubi9)
+    imageChange: {}
+  - type: Generic                    # webhook generico (curl, sistemi esterni)
+    generic:
+      secretReference:
+        name: hello-webhook          # il Secret deve contenere la chiave WebHookSecretKey
+      allowEnv: true                 # accetta variabili d'ambiente nel payload

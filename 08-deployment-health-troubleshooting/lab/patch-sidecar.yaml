@@ -1,0 +1,24 @@
+# Patch (strategic merge) per il passo 3.9: aggiunge il container "monitor" al pod di hello.
+# I container dello stesso pod condividono la rete: "localhost:8080" e' l'app hello.
+spec:
+  template:
+    spec:
+      containers:
+      - name: monitor
+        image: registry.access.redhat.com/ubi9/ubi-minimal
+        command: ["/bin/bash", "-c"]
+        args:
+        - |
+          trap 'exit 0' TERM
+          while true; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/healthz)
+            echo "$(date -u +%H:%M:%S) healthz=$code"
+            sleep 10 & wait $!
+          done
+        resources:
+          requests:
+            cpu: 10m
+            memory: 16Mi
+          limits:
+            cpu: 50m
+            memory: 64Mi

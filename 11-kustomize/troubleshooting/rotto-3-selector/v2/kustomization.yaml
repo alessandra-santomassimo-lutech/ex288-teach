@@ -1,0 +1,10 @@
+# Scenario 3 (modulo 11), versione 2: "aggiungiamo solo una label"...
+# Non correggere questo file: applicalo come indicato nel README, indaga, correggi sul cluster (o in una TUA copia della cartella).
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- ../v1
+labels:
+- pairs:
+    versione: v2
+  includeSelectors: true

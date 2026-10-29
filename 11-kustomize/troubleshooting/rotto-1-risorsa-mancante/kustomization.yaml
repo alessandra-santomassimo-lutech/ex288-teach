@@ -1,0 +1,11 @@
+# Scenario 1 (modulo 11): oc apply -k fallisce prima di creare qualsiasi oggetto.
+# Non correggere questo file: applicalo come indicato nel README, indaga, correggi sul cluster (o in una TUA copia della cartella).
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+labels:
+- pairs:
+    scenario: m11-1
+resources:
+- deployment.yaml
+- service.yaml
+- route.yaml

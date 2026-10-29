@@ -1,0 +1,17 @@
+# Modulo 13, passo 3.5: istanza di Data Grid creata tramite la API "Infinispan" fornita
+# dall'Operator Red Hat Data Grid (docs Data Grid 8.5, Data Grid Operator Guide, cap. 4 e 7).
+# Prerequisito: l'amministratore ha installato l'Operator in modalità "All namespaces".
+apiVersion: infinispan.org/v1
+kind: Infinispan
+metadata:
+  name: cache                          # diventa anche il nome del Service interno (porta 11222)
+  labels:
+    app.kubernetes.io/part-of: ex288-m13
+spec:
+  replicas: 1                          # numero di pod Data Grid: lo cambierai al passo 3.7
+  # version: <versione>                # facoltativo: se omesso l'Operator usa l'ultima versione supportata.
+  #                                    # Se il tuo cluster lo richiede, copia il valore da alm-examples.
+  service:
+    type: DataGrid                     # unico tipo supportato; non modificabile dopo la creazione
+    container:
+      ephemeralStorage: true           # niente PVC: i dati spariscono al riavvio (va bene per il lab)

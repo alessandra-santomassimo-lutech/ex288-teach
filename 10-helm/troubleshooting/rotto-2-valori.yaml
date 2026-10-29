@@ -1,0 +1,7 @@
+# Scenario 2 (modulo 10): file di valori per hello-chart con due errori.
+# Non correggere questo file: usalo come indicato nel README, indaga, poi correggi una TUA copia.
+app:
+  replica: 3
+  message: "Valori dal file dello scenario 2"
+route:
+  enabled: "no"

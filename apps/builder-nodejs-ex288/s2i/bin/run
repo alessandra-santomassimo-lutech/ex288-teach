@@ -1,0 +1,3 @@
+#!/bin/bash
+echo "---> [builder-ex288] avvio applicazione"
+exec /usr/libexec/s2i/run

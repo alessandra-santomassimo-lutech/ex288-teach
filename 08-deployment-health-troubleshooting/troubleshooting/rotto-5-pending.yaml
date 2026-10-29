@@ -1,0 +1,32 @@
+# Scenario 5 (modulo 08): il pod di t5 non parte.
+# Non correggere questo file: applicalo, indaga, correggi sul cluster.
+# Prerequisito: image stream "hello" con lookup locale nel progetto (passo 3.1 del README).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: t5
+  labels:
+    app: t5
+    scenario: m08-5
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: t5
+  template:
+    metadata:
+      labels:
+        app: t5
+    spec:
+      containers:
+      - name: hello
+        image: hello:latest
+        ports:
+        - containerPort: 8080
+        resources:
+          requests:
+            cpu: "100"
+            memory: 128Mi
+          limits:
+            cpu: "100"
+            memory: 256Mi

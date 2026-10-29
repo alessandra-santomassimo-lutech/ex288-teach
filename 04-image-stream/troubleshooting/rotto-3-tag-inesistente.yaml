@@ -1,0 +1,41 @@
+# Scenario 3 (modulo 04): il pod di t3 non parte.
+# Non correggere questo file: applicalo, indaga, correggi sul cluster.
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: s3-web
+  labels:
+    scenario: m04-3
+spec:
+  lookupPolicy:
+    local: true
+  tags:
+  - name: "v1"
+    from:
+      kind: DockerImage
+      name: registry.access.redhat.com/ubi9/httpd-24:latest
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: t3
+  labels:
+    app: t3
+    scenario: m04-3
+  annotations:
+    image.openshift.io/triggers: '[{"from":{"kind":"ImageStreamTag","name":"s3-web:v2"},"fieldPath":"spec.template.spec.containers[?(@.name==\"httpd\")].image"}]'
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: t3
+  template:
+    metadata:
+      labels:
+        app: t3
+    spec:
+      containers:
+      - name: httpd
+        image: s3-web:v2
+        ports:
+        - containerPort: 8080

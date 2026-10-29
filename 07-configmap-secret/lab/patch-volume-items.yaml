@@ -1,0 +1,20 @@
+# Patch per il passo 3.5: "items" (scegliere chiavi e nomi dei file) e "subPath"
+# (montare un singolo file senza nascondere il contenuto della directory di destinazione).
+spec:
+  template:
+    spec:
+      volumes:
+      - name: props-items
+        configMap:
+          name: app-props
+          items:
+          - key: app.properties               # chiave della ConfigMap...
+            path: ambiente/negozio.properties # ...diventa questo file (percorso relativo)
+      containers:
+      - name: hello
+        volumeMounts:
+        - name: props-items
+          mountPath: /etc/items               # /etc/items/ambiente/negozio.properties
+        - name: props-items
+          mountPath: /etc/subpath/negozio.properties
+          subPath: ambiente/negozio.properties # un solo file; NON si aggiorna se cambia la ConfigMap

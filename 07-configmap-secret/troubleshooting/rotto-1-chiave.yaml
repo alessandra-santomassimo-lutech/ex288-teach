@@ -1,0 +1,40 @@
+# Scenario 1 (modulo 07): il pod di t1 non parte.
+# Non correggere questo file: applicalo, indaga, correggi sul cluster.
+# Prerequisito: image stream "hello" con lookup locale (passo 3.1 del README).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: t1-config
+  labels:
+    scenario: m07-1
+data:
+  APP_COLOUR: rosso
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: t1
+  labels:
+    app: t1
+    scenario: m07-1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: t1
+  template:
+    metadata:
+      labels:
+        app: t1
+    spec:
+      containers:
+      - name: hello
+        image: hello:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: APP_COLOR
+          valueFrom:
+            configMapKeyRef:
+              name: t1-config
+              key: APP_COLOR

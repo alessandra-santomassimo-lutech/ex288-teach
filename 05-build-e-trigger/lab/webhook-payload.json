@@ -1,0 +1,10 @@
+{
+  "git": {
+    "ref": "main",
+    "message": "Build avviata con curl dal modulo 05",
+    "author": { "name": "Alessandra", "email": "alessandra@example.com" }
+  },
+  "env": [
+    { "name": "BUILD_LOGLEVEL", "value": "4" }
+  ]
+}

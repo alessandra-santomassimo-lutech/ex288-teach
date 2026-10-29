@@ -1,0 +1,13 @@
+Release {{ .Release.Name }} installata nel namespace {{ .Release.Namespace }} (revisione {{ .Release.Revision }}).
+
+Oggetti principali:
+  oc get deploy,svc,route,cm,secret -l app.kubernetes.io/instance={{ .Release.Name }} -n {{ .Release.Namespace }}
+
+{{- if .Values.route.enabled }}
+
+URL dell'applicazione:
+  echo https://$(oc get route {{ include "hello-chart.fullname" . }}-app -n {{ .Release.Namespace }} -o jsonpath='{.spec.host}')
+{{- else }}
+
+Route disabilitata (route.enabled=false): l'app è raggiungibile solo dal cluster sul Service {{ include "hello-chart.fullname" . }}-app:8080.
+{{- end }}

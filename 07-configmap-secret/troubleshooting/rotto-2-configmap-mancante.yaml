@@ -1,0 +1,31 @@
+# Scenario 2 (modulo 07): il pod di t2 resta in ContainerCreating.
+# Non correggere questo file: applicalo, indaga, correggi sul cluster.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: t2
+  labels:
+    app: t2
+    scenario: m07-2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: t2
+  template:
+    metadata:
+      labels:
+        app: t2
+    spec:
+      containers:
+      - name: hello
+        image: hello:latest
+        ports:
+        - containerPort: 8080
+        volumeMounts:
+        - name: files
+          mountPath: /etc/app
+      volumes:
+      - name: files
+        configMap:
+          name: t2-files

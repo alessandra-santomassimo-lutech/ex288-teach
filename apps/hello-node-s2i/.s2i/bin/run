@@ -1,0 +1,6 @@
+#!/bin/bash
+# Script run PERSONALIZZATO (modulo 06): stampa un banner e poi
+# passa il controllo allo script run originale con exec (PID 1 = node,
+# così il segnale SIGTERM arriva direttamente all'applicazione).
+echo "---> [ex288] run personalizzato: APP_MESSAGE='${APP_MESSAGE:-}'"
+exec "${STI_SCRIPTS_PATH:-/usr/libexec/s2i}/run"

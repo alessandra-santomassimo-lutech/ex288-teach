@@ -1,0 +1,82 @@
+# Scenario 5 (modulo 12): la build dell'immagine fallisce al push.
+# Non correggere questo file: applicalo, indaga, correggi sul cluster.
+# Applica con: sed "s|GIT_REPO_DA_SOSTITUIRE|$GIT_REPO|" rotto-5-push-negato.yaml | oc apply -f -
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: ts5-pipeline
+  labels:
+    scenario: m12-5
+spec:
+  params:
+  - name: GIT_URL
+    type: string
+  - name: IMAGE
+    type: string
+  workspaces:
+  - name: shared
+  tasks:
+  - name: fetch
+    taskRef:
+      resolver: cluster
+      params:
+      - name: kind
+        value: task
+      - name: name
+        value: git-clone
+      - name: namespace
+        value: openshift-pipelines
+    workspaces:
+    - name: output
+      workspace: shared
+    params:
+    - name: URL
+      value: $(params.GIT_URL)
+  - name: build
+    runAfter:
+    - fetch
+    taskRef:
+      resolver: cluster
+      params:
+      - name: kind
+        value: task
+      - name: name
+        value: buildah
+      - name: namespace
+        value: openshift-pipelines
+    workspaces:
+    - name: source
+      workspace: shared
+    params:
+    - name: IMAGE
+      value: $(params.IMAGE)
+    - name: DOCKERFILE
+      value: ./hello-node/Dockerfile
+    - name: CONTEXT
+      value: ./hello-node
+---
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+  name: ts5-run
+  labels:
+    scenario: m12-5
+spec:
+  pipelineRef:
+    name: ts5-pipeline
+  taskRunTemplate:
+    serviceAccountName: pipeline
+  params:
+  - name: GIT_URL
+    value: GIT_REPO_DA_SOSTITUIRE
+  - name: IMAGE
+    value: image-registry.openshift-image-registry.svc:5000/openshift/hello-node:ts5
+  workspaces:
+  - name: shared
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 500Mi

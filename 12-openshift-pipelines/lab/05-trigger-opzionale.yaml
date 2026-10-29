@@ -1,0 +1,22 @@
+# Modulo 12, passo 3.8 (opzionale): la stessa associazione binding+template come risorsa
+# Trigger separata e riutilizzabile, richiamata dall'EventListener con triggerRef.
+# Crea un SECONDO EventListener (hello-listener-ref, Service el-hello-listener-ref).
+apiVersion: triggers.tekton.dev/v1beta1
+kind: Trigger
+metadata:
+  name: hello-push-trigger
+spec:
+  serviceAccountName: pipeline
+  bindings:
+  - ref: hello-binding
+  template:
+    ref: hello-template
+---
+apiVersion: triggers.tekton.dev/v1beta1
+kind: EventListener
+metadata:
+  name: hello-listener-ref
+spec:
+  serviceAccountName: pipeline
+  triggers:
+  - triggerRef: hello-push-trigger

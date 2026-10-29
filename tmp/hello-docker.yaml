@@ -1,0 +1,139 @@
+apiVersion: v1
+items:
+- apiVersion: image.openshift.io/v1
+  kind: ImageStream
+  metadata:
+    annotations:
+      openshift.io/generated-by: OpenShiftNewApp
+    labels:
+      app: hello-docker
+      app.kubernetes.io/component: hello-docker
+      app.kubernetes.io/instance: hello-docker
+    name: nodejs-22-minimal
+  spec:
+    lookupPolicy:
+      local: false
+    tags:
+    - annotations:
+        openshift.io/imported-from: registry.access.redhat.com/ubi9/nodejs-22-minimal
+      from:
+        kind: DockerImage
+        name: registry.access.redhat.com/ubi9/nodejs-22-minimal
+      generation: null
+      importPolicy:
+        importMode: Legacy
+      name: latest
+      referencePolicy:
+        type: ""
+  status:
+    dockerImageRepository: ""
+- apiVersion: image.openshift.io/v1
+  kind: ImageStream
+  metadata:
+    annotations:
+      openshift.io/generated-by: OpenShiftNewApp
+    labels:
+      app: hello-docker
+      app.kubernetes.io/component: hello-docker
+      app.kubernetes.io/instance: hello-docker
+    name: hello-docker
+  spec:
+    lookupPolicy:
+      local: false
+  status:
+    dockerImageRepository: ""
+- apiVersion: build.openshift.io/v1
+  kind: BuildConfig
+  metadata:
+    annotations:
+      openshift.io/generated-by: OpenShiftNewApp
+    labels:
+      app: hello-docker
+      app.kubernetes.io/component: hello-docker
+      app.kubernetes.io/instance: hello-docker
+    name: hello-docker
+  spec:
+    nodeSelector: null
+    output:
+      to:
+        kind: ImageStreamTag
+        name: hello-docker:latest
+    postCommit: {}
+    resources: {}
+    source:
+      contextDir: hello-node
+      git:
+        uri: https://github.com/alessandra-santomassimo-lutech/ex288-apps.git
+      type: Git
+    strategy:
+      dockerStrategy:
+        from:
+          kind: ImageStreamTag
+          name: nodejs-22-minimal:latest
+      type: Docker
+    triggers:
+    - github:
+        secret: GlBLhGeEWZCDMQtLAGA9
+      type: GitHub
+    - generic:
+        secret: iXkhLr-YxktEH697UKCS
+      type: Generic
+    - type: ConfigChange
+    - imageChange: {}
+      type: ImageChange
+  status:
+    lastVersion: 0
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      image.openshift.io/triggers: '[{"from":{"kind":"ImageStreamTag","name":"hello-docker:latest"},"fieldPath":"spec.template.spec.containers[?(@.name==\"hello-docker\")].image"}]'
+      openshift.io/generated-by: OpenShiftNewApp
+    labels:
+      app: hello-docker
+      app.kubernetes.io/component: hello-docker
+      app.kubernetes.io/instance: hello-docker
+    name: hello-docker
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        deployment: hello-docker
+    strategy: {}
+    template:
+      metadata:
+        annotations:
+          openshift.io/generated-by: OpenShiftNewApp
+        labels:
+          deployment: hello-docker
+      spec:
+        containers:
+        - image: ' '
+          name: hello-docker
+          ports:
+          - containerPort: 8080
+            protocol: TCP
+          resources: {}
+  status: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      openshift.io/generated-by: OpenShiftNewApp
+    labels:
+      app: hello-docker
+      app.kubernetes.io/component: hello-docker
+      app.kubernetes.io/instance: hello-docker
+    name: hello-docker
+  spec:
+    ports:
+    - name: 8080-tcp
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+    selector:
+      deployment: hello-docker
+  status:
+    loadBalancer: {}
+kind: List
+metadata: {}

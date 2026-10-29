@@ -1,0 +1,14 @@
+# Modulo 12, passo 3.8: EventListener = pod + Service (el-<nome>) che riceve eventi HTTP
+# e, per ogni trigger, applica binding + template.
+apiVersion: triggers.tekton.dev/v1beta1
+kind: EventListener
+metadata:
+  name: hello-listener
+spec:
+  serviceAccountName: pipeline      # SA con cui l'EventListener legge binding/template e crea la PipelineRun
+  triggers:
+  - name: hello-push
+    bindings:
+    - ref: hello-binding
+    template:
+      ref: hello-template

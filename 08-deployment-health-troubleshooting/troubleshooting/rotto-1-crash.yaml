@@ -1,0 +1,30 @@
+# Scenario 1 (modulo 08): t1 non resta mai in esecuzione.
+# Non correggere questo file: applicalo, indaga, correggi sul cluster.
+# Prerequisito: image stream "hello" con lookup locale nel progetto (passo 3.1 del README).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: t1
+  labels:
+    app: t1
+    scenario: m08-1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: t1
+  template:
+    metadata:
+      labels:
+        app: t1
+    spec:
+      containers:
+      - name: hello
+        image: hello:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: APP_MESSAGE
+          value: "Scenario 1"
+        - name: FAIL_ON_START
+          value: "true"

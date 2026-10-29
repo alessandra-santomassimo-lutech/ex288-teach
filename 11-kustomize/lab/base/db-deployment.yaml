@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgresql
+  labels:
+    app: postgresql
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: postgresql
+  template:
+    metadata:
+      labels:
+        app: postgresql
+    spec:
+      containers:
+      - name: postgresql
+        image: registry.redhat.io/rhel9/postgresql-16
+        ports:
+        - name: postgresql
+          containerPort: 5432
+        env:
+        - name: POSTGRESQL_DATABASE
+          valueFrom:
+            secretKeyRef:
+              name: db-credentials
+              key: database-name
+        - name: POSTGRESQL_USER
+          valueFrom:
+            secretKeyRef:
+              name: db-credentials
+              key: database-user
+        - name: POSTGRESQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: db-credentials
+              key: database-password
+        readinessProbe:
+          tcpSocket:
+            port: 5432
+          initialDelaySeconds: 5
+        volumeMounts:
+        - name: data
+          mountPath: /var/lib/pgsql/data
+      volumes:
+      - name: data
+        emptyDir: {}

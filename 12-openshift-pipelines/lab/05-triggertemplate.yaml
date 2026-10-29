@@ -1,0 +1,37 @@
+# Modulo 12, passo 3.8: TriggerTemplate = QUALI risorse creare quando arriva un evento.
+# I parametri arrivano dal TriggerBinding e si usano come $(tt.params.<nome>).
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerTemplate
+metadata:
+  name: hello-template
+spec:
+  params:
+  - name: git-url
+    description: URL del repository
+  - name: git-revision
+    description: Commit da costruire
+    default: main
+  resourcetemplates:
+  - apiVersion: tekton.dev/v1
+    kind: PipelineRun
+    metadata:
+      generateName: hello-pipeline-trigger-
+    spec:
+      pipelineRef:
+        name: hello-pipeline
+      taskRunTemplate:
+        serviceAccountName: pipeline
+      params:
+      - name: GIT_URL
+        value: $(tt.params.git-url)
+      - name: GIT_REVISION
+        value: $(tt.params.git-revision)
+      workspaces:
+      - name: shared
+        volumeClaimTemplate:
+          spec:
+            accessModes:
+            - ReadWriteOnce
+            resources:
+              requests:
+                storage: 500Mi

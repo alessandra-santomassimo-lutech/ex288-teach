@@ -1,0 +1,17 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: hello-node
+  labels:
+    app: hello-node
+spec:
+  to:
+    kind: Service
+    # ATTENZIONE: kustomize NON aggiorna questo riferimento quando usi namePrefix/nameSuffix
+    # (Route è una risorsa OpenShift che kustomize non conosce): vedi overlays/dev
+    name: hello-node
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect

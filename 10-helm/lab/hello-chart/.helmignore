@@ -1,0 +1,5 @@
+# File esclusi da "helm package"
+.git/
+*.swp
+*.bak
+*.tmp

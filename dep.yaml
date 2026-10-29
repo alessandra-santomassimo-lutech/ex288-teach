@@ -1,0 +1,113 @@
+apiVersion: v1
+items:
+  - apiVersion: image.openshift.io/v1
+    kind: ImageStream
+    metadata:
+      annotations:
+        openshift.io/generated-by: OpenShiftNewApp
+      labels:
+        app: shop
+        app.kubernetes.io/component: shop
+        app.kubernetes.io/instance: shop
+      name: shop
+    spec:
+      lookupPolicy:
+        local: false
+    status:
+      dockerImageRepository: ''
+  - apiVersion: build.openshift.io/v1
+    kind: BuildConfig
+    metadata:
+      annotations:
+        openshift.io/generated-by: OpenShiftNewApp
+      labels:
+        app: shop
+        app.kubernetes.io/component: shop
+        app.kubernetes.io/instance: shop
+      name: shop
+    spec:
+      nodeSelector: null
+      output:
+        to:
+          kind: ImageStreamTag
+          name: shop:latest
+      postCommit: {}
+      resources: {}
+      source:
+        contextDir: hello-node
+        git:
+          uri: https://github.com/alessandra-santomassimo-lutech/ex288-apps.git
+        type: Git
+      strategy:
+        sourceStrategy:
+          from:
+            kind: ImageStreamTag
+            name: nodejs:22-ubi9
+            namespace: openshift
+        type: Source
+      triggers:
+        - github:
+            secret: AFGscVzQsw9mVwlS4mDL
+          type: GitHub
+        - generic:
+            secret: 833NT0yh0u8NRFNnsu0V
+          type: Generic
+        - type: ConfigChange
+        - imageChange: {}
+          type: ImageChange
+    status:
+      lastVersion: 0
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      annotations:
+        image.openshift.io/triggers: '[{"from":{"kind":"ImageStreamTag","name":"shop:latest"},"fieldPath":"spec.template.spec.containers[?(@.name==\"shop\")].image"}]'
+        openshift.io/generated-by: OpenShiftNewApp
+      labels:
+        app: shop
+        app.kubernetes.io/component: shop
+        app.kubernetes.io/instance: shop
+      name: shop
+    spec:
+      replicas: 2
+      selector:
+        matchLabels:
+          deployment: shop
+      strategy: {}
+      template:
+        metadata:
+          annotations:
+            openshift.io/generated-by: OpenShiftNewApp
+          labels:
+            deployment: shop
+        spec:
+          containers:
+            - image: ' '
+              name: shop
+              ports:
+                - containerPort: 8080
+                  protocol: TCP
+              resources: {}
+    status: {}
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      annotations:
+        openshift.io/generated-by: OpenShiftNewApp
+      labels:
+        app: shop
+        app.kubernetes.io/component: shop
+        app.kubernetes.io/instance: shop
+      name: shop
+    spec:
+      ports:
+        - name: 8080-tcp
+          port: 8080
+          protocol: TCP
+          targetPort: 8080
+      selector:
+        deployment: shop
+    status:
+      loadBalancer: {}
+kind: List
+metadata: {}

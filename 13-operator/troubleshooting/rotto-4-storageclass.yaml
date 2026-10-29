@@ -1,0 +1,15 @@
+# Scenario 4 (modulo 13): la risorsa viene creata, ma il servizio non diventa mai pronto.
+# Non correggere questo file: applicalo, indaga, correggi sul cluster.
+apiVersion: infinispan.org/v1
+kind: Infinispan
+metadata:
+  name: ts4-cache
+  labels:
+    scenario: m13-4
+spec:
+  replicas: 1
+  service:
+    type: DataGrid
+    container:
+      storage: 1Gi
+      storageClassName: classe-inesistente

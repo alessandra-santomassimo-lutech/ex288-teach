@@ -1,0 +1,14 @@
+# Modulo 12, passo 3.6: modello di PVC per il workspace "shared" usato con
+#   tkn pipeline start ... -w name=shared,volumeClaimTemplateFile=04-pvc-template.yaml
+# Per ogni PipelineRun viene creata una PVC nuova, cancellata insieme alla PipelineRun.
+# Richiede una StorageClass di default sul cluster (oc get storageclass).
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: shared-pvc
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 500Mi

@@ -1,0 +1,16 @@
+{
+  "ref": "refs/heads/main",
+  "after": "COMMIT_DA_SOSTITUIRE",
+  "repository": {
+    "name": "ex288-apps",
+    "html_url": "GIT_REPO_DA_SOSTITUIRE",
+    "clone_url": "GIT_REPO_DA_SOSTITUIRE"
+  },
+  "head_commit": {
+    "id": "COMMIT_DA_SOSTITUIRE",
+    "message": "Test manuale del trigger (modulo 12)"
+  },
+  "pusher": {
+    "name": "alessandra"
+  }
+}

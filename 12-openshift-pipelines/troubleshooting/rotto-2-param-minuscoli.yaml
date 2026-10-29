@@ -1,0 +1,56 @@
+# Scenario 2 (modulo 12): il clone non parte.
+# Non correggere questo file: applicalo, indaga, correggi sul cluster.
+# Applica con: sed "s|GIT_REPO_DA_SOSTITUIRE|$GIT_REPO|" rotto-2-param-minuscoli.yaml | oc apply -f -
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: ts2-pipeline
+  labels:
+    scenario: m12-2
+spec:
+  params:
+  - name: GIT_URL
+    type: string
+  workspaces:
+  - name: shared
+  tasks:
+  - name: fetch
+    taskRef:
+      resolver: cluster
+      params:
+      - name: kind
+        value: task
+      - name: name
+        value: git-clone
+      - name: namespace
+        value: openshift-pipelines
+    workspaces:
+    - name: output
+      workspace: shared
+    params:
+    - name: url
+      value: $(params.GIT_URL)
+    - name: revision
+      value: main
+---
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+  name: ts2-run
+  labels:
+    scenario: m12-2
+spec:
+  pipelineRef:
+    name: ts2-pipeline
+  params:
+  - name: GIT_URL
+    value: GIT_REPO_DA_SOSTITUIRE
+  workspaces:
+  - name: shared
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 100Mi

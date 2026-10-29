@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "hello-chart.fullname" . }}-db
+  labels:
+    {{- include "hello-chart.labels" . | nindent 4 }}
+    app.kubernetes.io/component: db
+spec:
+  replicas: 1
+  strategy:
+    # Un solo pod alla volta sul volume del database
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "hello-chart.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: db
+  template:
+    metadata:
+      labels:
+        {{- include "hello-chart.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: db
+      annotations:
+        # Se cambiano le credenziali il pod del database viene ricreato
+        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+    spec:
+      containers:
+      - name: postgresql
+        image: {{ .Values.db.image | quote }}
+        ports:
+        - name: postgresql
+          containerPort: 5432
+        env:
+        - name: POSTGRESQL_DATABASE
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "hello-chart.fullname" . }}-db
+              key: database-name
+        - name: POSTGRESQL_USER
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "hello-chart.fullname" . }}-db
+              key: database-user
+        - name: POSTGRESQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "hello-chart.fullname" . }}-db
+              key: database-password
+        readinessProbe:
+          tcpSocket:
+            port: 5432
+          initialDelaySeconds: 5
+        volumeMounts:
+        - name: data
+          mountPath: /var/lib/pgsql/data
+      volumes:
+      - name: data
+        {{- if .Values.db.persistence.enabled }}
+        persistentVolumeClaim:
+          claimName: {{ include "hello-chart.fullname" . }}-db
+        {{- else }}
+        emptyDir: {}
+        {{- end }}

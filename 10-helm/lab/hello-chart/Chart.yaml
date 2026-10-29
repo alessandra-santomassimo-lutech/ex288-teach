@@ -1,0 +1,13 @@
+# Metadati del chart (Helm 3+: apiVersion v2)
+apiVersion: v2
+name: hello-chart
+description: hello-node + PostgreSQL per OpenShift (modulo 10 del corso EX288)
+type: application
+# Versione del CHART: incrementala a ogni modifica di template o valori di default
+version: 0.1.0
+# Versione dell'APPLICAZIONE distribuita (solo informativa, finisce nella label app.kubernetes.io/version)
+appVersion: "1.0.0"
+keywords:
+- nodejs
+- postgresql
+- ex288
